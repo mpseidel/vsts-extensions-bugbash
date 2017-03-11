@@ -6,6 +6,7 @@
     <script src="scripts/lib/VSS.SDK.min.js"></script>
 
     <link rel="stylesheet" type="text/css" href="css/app.min.css">
+    <link rel="stylesheet" type="text/css" href="css/lib/fabric.min.css">
 </head>
 
 <body>
@@ -13,7 +14,12 @@
         // Initialize framework 
         VSS.init({
             explicitNotifyLoaded: true,
-            usePlatformScripts: true
+            usePlatformScripts: true,
+            moduleLoaderConfig: {
+                paths: {                    
+                    "@microsoft/load-themed-styles": "scripts/microsoft/index"
+                }
+            }
         });
         
         // Load main entry point for extension

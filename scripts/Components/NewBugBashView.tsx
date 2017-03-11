@@ -13,7 +13,7 @@ export class NewBugBashView extends HubView {
     }
 
     protected initialize(): void {
-
+        
     }
 
     protected getStateFromStore(): IHubViewState {

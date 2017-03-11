@@ -3,6 +3,7 @@
   "license": "MIT",
   "description": "Easier way to manage bug bashes",
   "private": true,
+  "main": "index.html",
   "version": "1.0.0",
   "scripts": {
     "postinstall": "grunt install"
@@ -29,6 +30,7 @@
     "typescript": "^2.2.1",
     "typings": "^2.1.0",
     "requirejs": "^2.3.3",
-    "vss-web-extension-sdk": "^2.113.0"
+    "vss-web-extension-sdk": "^2.113.0",
+    "office-ui-fabric-react": "^2.2.1"
   }
 }

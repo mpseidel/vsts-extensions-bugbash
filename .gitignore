@@ -7,3 +7,7 @@ typings
 .vscode/*.db-wal
 .sass-cache
 css/*.css
+css/*.css.map
+scripts/OfficeFabric
+scripts/microsoft
+scripts/uifabric

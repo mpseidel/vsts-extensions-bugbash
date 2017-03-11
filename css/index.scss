@@ -1,21 +1,27 @@
 /*
 ** Layout
 */
-#ext-container, #ext-container .all-view {
+#ext-container {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     overflow: auto;    
-}
-
-#ext-container {
     margin: 17px 20px;
-}
 
-#ext-container .all-view .all-view-contents {
-    margin-top: 50px;
+    .all-view {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: auto;
+
+        .all-view-contents {
+            margin-top: 50px;
+        }
+    }
 }
 
 /*
@@ -23,27 +29,48 @@
 */
 .create-new-button {
     float: right;
-    width: 120px;
-    background-color: #0078d7;
-    border-color: #0078d7;
-    color: #ffffff;
-    height: 32px;
-    line-height: 32px;
-    font-weight: 600;
-    font-size: 14px;
-    text-align: center;
-    cursor: pointer;
-}
 
-.create-new-button:hover,
-.create-new-button:focus {
-    background-color: #005a9e;
-    border-color: #005a9e;
+    &:hover, &:focus {
+        color: #ffffff;
+        background-color: #005a9e;
+    }
 }
 
 /*
 ** Message Panel
 */
 .message-panel {
-    
+    padding: 16px;
+    margin: 10px 0;
+    text-align: center;
+
+    .message-text {
+        margin-left: 5px;
+    }
+
+    &.message-info {
+        background-color: #f4f4f4;
+    }
+
+    &.message-warning {
+        background-color: #fff4ce;
+    }
+
+    &.message-error {
+        background-color: #fde7e9;
+    }
+
+    &.message-success {
+        background-color: #dff6dd;
+    }
+}
+
+/*
+** Loading icon
+*/
+.content-loading {
+    margin-top: 100px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 10%;
 }

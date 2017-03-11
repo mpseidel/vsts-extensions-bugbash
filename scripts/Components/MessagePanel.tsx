@@ -8,7 +8,8 @@ export interface IMessagePanelProps {
 export enum MessageType {
     Error,
     Warning,
-    Info
+    Info,
+    Success
 }
 
 export var MessagePanel: React.StatelessComponent<IMessagePanelProps> =
@@ -21,9 +22,13 @@ export var MessagePanel: React.StatelessComponent<IMessagePanelProps> =
                 iconClass = "bowtie-icon bowtie-status-failure";
                 className += " message-error";
                 break;
-            case MessageType.Error:
+            case MessageType.Warning:
                 iconClass = "bowtie-icon bowtie-status-warning";
                 className += " message-warning";
+                break;
+            case MessageType.Success:
+                iconClass = "bowtie-icon bowtie-status-success-outline";
+                className += " message-success";
                 break;
             default:
                 iconClass = "bowtie-icon bowtie-status-info";
@@ -31,8 +36,10 @@ export var MessagePanel: React.StatelessComponent<IMessagePanelProps> =
                 break;
         }
 
-        return <div className={className}>
-            <span className={iconClass} />    
-            <span>{props.message}</span>
-        </div>;
+        return (
+            <div className={className}>
+                <span className={iconClass} />    
+                <span className="message-text">{props.message}</span>
+            </div>
+        );
 }

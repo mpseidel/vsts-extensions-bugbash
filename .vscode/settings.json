@@ -4,6 +4,16 @@
         "**/*.js": {
             "when": "$(basename).tsx"
         },
-        "**/*.vsix": true
+        "**/*.css": {
+            "when": "$(basename).scss"
+        },
+        "**/*.css.map": {
+            "when": "$(basename).scss"
+        },
+        "**/*.vsix": true,
+        ".sass-cache/**/*": true,
+        "dist/**/*": true,
+        "scripts/microsoft/**/*": true,
+        "scripts/uifabric/**/*": true
     }
 }

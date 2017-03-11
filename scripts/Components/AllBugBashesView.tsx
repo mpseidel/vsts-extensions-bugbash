@@ -28,7 +28,7 @@ export class AllBugBashesView extends HubView {
         }
         else {
             if (this.state.items.length == 0) {
-                return <MessagePanel message="No bug bashes found" messageType={MessageType.Info} />
+                return <MessagePanel message="No instance of bug bash created yet." messageType={MessageType.Info} />
             }
             else {
                 return <MessagePanel message="yay" messageType={MessageType.Info} />

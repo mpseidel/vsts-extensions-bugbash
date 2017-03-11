@@ -46,6 +46,89 @@
                         ], 
                         dest: "dist/scripts/lib",
                         filter: "isFile" 
+                    },
+                    {
+                        expand: true, 
+                        flatten: true, 
+                        src: [
+                            "node_modules/office-ui-fabric-react/dist/css/fabric.min.css"
+                        ], 
+                        dest: "dist/css/lib",
+                        filter: "isFile" 
+                    }
+                ]
+            },
+            OfficeFabric: {
+                files: [
+                    {
+                        expand: true, 
+                        src: [
+                            "node_modules/office-ui-fabric-react/lib-amd/**/*"
+                        ], 
+                        dest: "scripts/OfficeFabric/",
+                        filter: "isFile",
+                        rename: function (dest, src) {
+                            return dest + src.substring(44);
+                        }
+                    },
+                    {
+                        expand: true, 
+                        src: [
+                            "node_modules/@microsoft/load-themed-styles/lib-amd/**/*"
+                        ], 
+                        dest: "scripts/microsoft/",
+                        filter: "isFile",
+                        rename: function (dest, src) {
+                            return dest + src.substring(51);
+                        }
+                    },
+                    {
+                        expand: true, 
+                        src: [
+                            "node_modules/@uifabric/utilities/lib-amd/**/*"
+                        ], 
+                        dest: "scripts/uifabric/",
+                        filter: "isFile",
+                        rename: function (dest, src) {
+                            return dest + src.substring(23);
+                        }
+                    }
+                ]
+            },
+            OfficeFabric_dist: {
+                files: [
+                    {
+                        expand: true, 
+                        src: [
+                            "node_modules/office-ui-fabric-react/lib-amd/**/*"
+                        ], 
+                        dest: "dist/scripts/OfficeFabric/",
+                        filter: "isFile",
+                        rename: function (dest, src) {
+                            return dest + src.substring(44);
+                        }
+                    },
+                    {
+                        expand: true, 
+                        src: [
+                            "node_modules/@microsoft/load-themed-styles/lib-amd/**/*"
+                        ], 
+                        dest: "dist/scripts/microsoft/",
+                        filter: "isFile",
+                        rename: function (dest, src) {
+                            return dest + src.substring(51);
+                        }
+                    },
+                    {
+                        expand: true, 
+                        src: [
+                            "node_modules/@uifabric/utilities/lib-amd/**/*"
+                        ], 
+                        dest: "dist/scripts/uifabric/",
+                        filter: "isFile",
+                        rename: function (dest, src) {
+                            return dest + src.substring(23);
+                        }
                     }
                 ]
             }
@@ -106,7 +189,7 @@
         clean: {
             build: ["dist", "temp", "*.vsix"],
             temp: ["temp"],
-            all: ["dist", "typings", "node_modules", "temp", "*.vsix"]
+            all: ["dist", "typings", "node_modules", "temp", "*.vsix", "scripts/OfficeFabric", "scripts/@microsoft", "scripts/@uifabric", ".sass-cache"]
         }
     });
 
@@ -120,11 +203,11 @@
     grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks("grunt-typings");
 
-    grunt.registerTask("install", ["typings:install"]);
+    grunt.registerTask("install", ["typings:install", "copy:OfficeFabric"]);
     grunt.registerTask("copy_files", ["copy:root", "copy:img", "copy:libs"]);
 
-    grunt.registerTask("build", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "uglify:scripts", "clean:temp"]);
-    grunt.registerTask("build_dev", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "copy:js", "clean:temp"]);
+    grunt.registerTask("build", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "uglify:scripts", "clean:temp", "copy:OfficeFabric_dist"]);
+    grunt.registerTask("build_dev", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "copy:js", "clean:temp", "copy:OfficeFabric_dist"]);
 
     grunt.registerTask("package", ["build", "exec:package"]);
     grunt.registerTask("package_dev", ["build_dev", "exec:package"]);

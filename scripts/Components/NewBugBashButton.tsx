@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Button, ButtonType } from "../OfficeFabric/Button";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 
@@ -14,7 +15,7 @@ export class NewBugBashButton extends React.Component<INewBugBashButtonProps, vo
     }
 
     public render(): JSX.Element {
-        return <div tabIndex={0} className="create-new-button" onClick={this._onNewClick}>New BugBash</div>
+        return <Button className="create-new-button" buttonType={ButtonType.primary} onClick={this._onNewClick}>New BugBash</Button>
     }
 
     private async _onNewClick() {
