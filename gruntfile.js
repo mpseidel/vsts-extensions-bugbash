@@ -189,7 +189,7 @@
         clean: {
             build: ["dist", "temp", "*.vsix"],
             temp: ["temp"],
-            all: ["dist", "typings", "node_modules", "temp", "*.vsix", "scripts/OfficeFabric", "scripts/@microsoft", "scripts/@uifabric", ".sass-cache"]
+            all: ["dist", "typings", "node_modules", "temp", "*.vsix", "scripts/OfficeFabric", "scripts/microsoft", "scripts/uifabric", ".sass-cache"]
         }
     });
 
