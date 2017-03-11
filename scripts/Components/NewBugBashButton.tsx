@@ -3,14 +3,14 @@ import * as ReactDOM from "react-dom";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 
-import { UrlActions } from "../Models";
+import { UrlActions, IHubContext } from "../Models";
 
 export interface INewBugBashButtonProps {
-    
+    context: IHubContext;
 }
 
 export class NewBugBashButton extends React.Component<INewBugBashButtonProps, void> {
-    constructor(props: INewBugBashButtonProps, context) {
+    constructor(props: INewBugBashButtonProps, context: IHubContext) {
         super(props, context);
     }
 

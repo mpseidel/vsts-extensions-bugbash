@@ -43,3 +43,16 @@ export interface IBugBash {
     startTime?: Date;
     endTime?: string;    
 }
+
+export enum HubViewMode {
+    All,
+    New,
+    View,
+    Edit,
+    Loading
+}
+
+export enum LoadingState {
+    Loading,
+    Loaded
+}

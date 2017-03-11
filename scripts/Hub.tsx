@@ -10,16 +10,32 @@ import {MessageAreaControl, MessageAreaType} from "VSS/Controls/Notifications";
 
 // components
 import { NewBugBashButton } from "./Components/NewBugBashButton";
+import { Loading } from "./Components/Loading";
+import { AllBugBashesView } from "./Components/AllBugBashesView";
+import { NewBugBashView } from "./Components/NewBugBashView";
+import { EditBugBashView } from "./Components/EditBugBashView";
+import { ViewBugBashView } from "./Components/ViewBugBashView";
 
-import { UrlActions, IHubContext } from "./Models";
+import { UrlActions, IHubContext, HubViewMode } from "./Models";
 import { ActionsCreator, ActionsHub } from "./Actions/ActionsCreator";
 import { StoresHub } from "./Stores/StoresHub";
 
-export class Hub {
+export interface IHubProps {
+
+}
+
+export interface IHubState {
+    hubViewMode: HubViewMode;
+    id?: string;
+}
+
+export class Hub extends React.Component<IHubProps, IHubState> {
     private _statusIndicator: StatusIndicator;
     private _context: IHubContext;
 
-    public async initialize() {
+    constructor(props: IHubProps, context?: any) {
+        super(props, context);
+
         const actionsHub = new ActionsHub();
         const storeHub = new StoresHub(actionsHub);
         const actionsCreator = new ActionsCreator(actionsHub, storeHub.bugBashItemStore);
@@ -30,86 +46,67 @@ export class Hub {
             actionsCreator: actionsCreator
         };
 
-        const navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
-        const state = await navigationService.getCurrentState();
-        if (!state.action) {
-            navigationService.updateHistoryEntry(UrlActions.ACTION_ALL, null, true);
-        }
-
-        this._attachNavigate();
-    }    
+        this._initialize();
+    }
 
     public getChildContext(): IHubContext {
         return this._context;
     }
 
-    private _showLoading(): void {
-        if (!this._statusIndicator) {
-            this._statusIndicator = BaseControl.createIn(StatusIndicator, $("#content-container"), {
-                center: true, 
-                throttleMinTime: 0, 
-                imageClass: "big-status-progress", 
-                message: "Loading..." 
-            }) as StatusIndicator;
+    public render(): JSX.Element {
+        switch (this.state.hubViewMode) {            
+            case HubViewMode.All:
+                return <AllBugBashesView />;
+            case HubViewMode.New:
+                return <NewBugBashView />;
+            case HubViewMode.Edit:
+                return <EditBugBashView id={this.state.id} />;
+            case HubViewMode.View:
+                return <ViewBugBashView id={this.state.id} />;
+            default:
+                return <Loading />;
         }
-        this._statusIndicator.start();
     }
 
-    private _hideLoading(): void {
-        if (this._statusIndicator) {
-            this._statusIndicator.complete();
-        }
-        this._statusIndicator.dispose();
-        this._statusIndicator = null;
-    }
+    private async _initialize() {
+        this.setState({ hubViewMode: HubViewMode.Loading });
 
-    private async _onShowAllBugBashes() {
-        ReactDOM.unmountComponentAtNode($("#menu-container")[0]);
-        ReactDOM.unmountComponentAtNode($("#content-container")[0]);
+        this._attachNavigate();
 
-        ReactDOM.render(<NewBugBashButton />, $("#menu-container")[0]);
-
-        this._context.actionsCreator.initializeAllBugBashes();
-    }
-
-    private _onNewBugBash() {
-        ReactDOM.unmountComponentAtNode($("#menu-container")[0]);
-        ReactDOM.unmountComponentAtNode($("#content-container")[0]);
-    }
-
-    private _onEditBugBash() {
-        ReactDOM.unmountComponentAtNode($("#menu-container")[0]);
-        ReactDOM.unmountComponentAtNode($("#content-container")[0]);
-    }
-
-    private _onViewBugBash() {
-        ReactDOM.unmountComponentAtNode($("#menu-container")[0]);
-        ReactDOM.unmountComponentAtNode($("#content-container")[0]);
+        const navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
+        const state = await navigationService.getCurrentState();
+        if (!state.action) {
+            navigationService.updateHistoryEntry(UrlActions.ACTION_ALL, null, true);
+        }        
     }
 
     private async _attachNavigate() {        
         const navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
 
         navigationService.attachNavigate(UrlActions.ACTION_ALL, () => {
-            this._onShowAllBugBashes();
+            this.setState({ hubViewMode: HubViewMode.All });
         }, true);
 
         navigationService.attachNavigate(UrlActions.ACTION_NEW, () => {
-            this._onNewBugBash();
+            this.setState({ hubViewMode: HubViewMode.New });
         }, true);
 
         navigationService.attachNavigate(UrlActions.ACTION_EDIT, async () => {
             const state = await navigationService.getCurrentState();
             if (state.id) {
-                this._onEditBugBash();
+                this.setState({ hubViewMode: HubViewMode.Edit, id: state.id });
             }
         }, true);
 
         navigationService.attachNavigate(UrlActions.ACTION_VIEW, async () => {
             const state = await navigationService.getCurrentState();
             if (state.id) {
-                this._onViewBugBash();
+                this.setState({ hubViewMode: HubViewMode.View, id: state.id });
             }
         }, true);
-    }
+    }  
+}
+
+export function init() {
+    ReactDOM.render(<Hub />, $("#ext-container")[0]);
 }
