@@ -1,6 +1,5 @@
 import Service = require("VSS/Service");
 import { Constants, IBugBash } from "./Models";
-import Utils_String = require("VSS/Utils/String");
 
 export class BugBashManager {
     public static async readBugBashes(): Promise<IBugBash[]> {

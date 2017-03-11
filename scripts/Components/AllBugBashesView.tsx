@@ -1,11 +1,13 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 
 import { UrlActions, IHubContext, IBugBash, LoadingState } from "../Models";
 import { HubView, IHubViewState, IHubViewProps } from "./HubView";
 import { Loading } from "./Loading";
+
+import { NewBugBashButton } from "./NewBugBashButton";
+import { MessagePanel, MessageType } from "./MessagePanel";
 
 export class AllBugBashesView extends HubView {
     
@@ -14,15 +16,23 @@ export class AllBugBashesView extends HubView {
             return <Loading />;
         }
         else {
-            return <div>All</div>;
+            if (this.state.items.length == 0) {
+                <MessagePanel message="No bug bashes found" messageType={MessageType.Info} />
+            }
+            else {
+                <MessagePanel message="yay" messageType={MessageType.Info} />
+            }
         }
     }
 
     protected initialize(): void {
-
+        this.context.actionsCreator.initializeAllBugBashes();
     }
 
     protected getStateFromStore(): IHubViewState {
-        return null;
+        return {
+            items: this.context.stores.bugBashItemStore.getAll(),
+            loadingState: this.context.stores.bugBashItemStore.isLoaded() ? LoadingState.Loaded : LoadingState.Loading
+        };
     }
 }

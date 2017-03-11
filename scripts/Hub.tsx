@@ -4,21 +4,25 @@ import * as ReactDOM from "react-dom";
 
 // vsts imports
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
-import { StatusIndicator } from "VSS/Controls/StatusIndicator";
-import { BaseControl } from "VSS/Controls";
-import {MessageAreaControl, MessageAreaType} from "VSS/Controls/Notifications";
 
 // components
-import { NewBugBashButton } from "./Components/NewBugBashButton";
 import { Loading } from "./Components/Loading";
 import { AllBugBashesView } from "./Components/AllBugBashesView";
 import { NewBugBashView } from "./Components/NewBugBashView";
 import { EditBugBashView } from "./Components/EditBugBashView";
 import { ViewBugBashView } from "./Components/ViewBugBashView";
 
-import { UrlActions, IHubContext, HubViewMode } from "./Models";
+import { UrlActions, IHubContext, HubContextPropTypes } from "./Models";
 import { ActionsCreator, ActionsHub } from "./Actions/ActionsCreator";
 import { StoresHub } from "./Stores/StoresHub";
+
+export enum HubViewMode {
+    All,
+    New,
+    View,
+    Edit,
+    Loading
+}
 
 export interface IHubProps {
 
@@ -30,7 +34,8 @@ export interface IHubState {
 }
 
 export class Hub extends React.Component<IHubProps, IHubState> {
-    private _statusIndicator: StatusIndicator;
+    static childContextTypes = HubContextPropTypes;
+
     private _context: IHubContext;
 
     constructor(props: IHubProps, context?: any) {
@@ -44,16 +49,25 @@ export class Hub extends React.Component<IHubProps, IHubState> {
             actions: actionsHub,
             stores: storeHub,
             actionsCreator: actionsCreator
-        };
-
-        this._initialize();
+        };     
     }
 
     public getChildContext(): IHubContext {
         return this._context;
     }
 
+    public componentDidMount() {
+        this._initialize();
+    }
+
+    public componentWillUnmount() {
+        
+    }
+
     public render(): JSX.Element {
+        if (!this.state) {
+            return <Loading />;
+        }
         switch (this.state.hubViewMode) {            
             case HubViewMode.All:
                 return <AllBugBashesView />;

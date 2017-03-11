@@ -19,6 +19,12 @@ export interface IHubContext {
     actionsCreator: ActionsCreator;
 }
 
+export const HubContextPropTypes: React.ValidationMap<any> = {
+    actions: React.PropTypes.object.isRequired,
+    stores: React.PropTypes.object.isRequired,
+    actionsCreator: React.PropTypes.object.isRequired
+};
+
 export module UrlActions {
     export var ACTION_NEW = "new";
     export var ACTION_ALL = "all";
@@ -42,14 +48,6 @@ export interface IBugBash {
     description?: string;    
     startTime?: Date;
     endTime?: string;    
-}
-
-export enum HubViewMode {
-    All,
-    New,
-    View,
-    Edit,
-    Loading
 }
 
 export enum LoadingState {

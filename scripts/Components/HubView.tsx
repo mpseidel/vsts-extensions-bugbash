@@ -1,5 +1,4 @@
 import * as React from "react";
-import * as ReactDOM from "react-dom";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 
@@ -15,6 +14,8 @@ export interface IHubViewState {
 }
 
 export abstract class HubView extends React.Component<IHubViewProps, IHubViewState> {
+    public context: IHubContext;
+
     constructor(props: IHubViewProps, context: IHubContext) {
         super(props, context);
 

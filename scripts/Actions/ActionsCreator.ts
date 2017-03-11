@@ -5,7 +5,6 @@ import { IBugBashItemStore } from "../Stores/BugbashItemStore";
 import { BugBashManager } from "../BugbashManager";
 
 export class ActionsHub {
-    // Query hierarchy store actions
     public InitializeBugBashItems = new Action<IBugBash[]>();
     public BugBashItemDeleted = new Action<IBugBash>();
     public BugBashItemAdded = new Action<IBugBash>();
