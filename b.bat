@@ -1,0 +1,2 @@
+del *.vsix
+grunt publish

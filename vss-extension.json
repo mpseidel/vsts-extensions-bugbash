@@ -1,0 +1,88 @@
+{
+    "manifestVersion": 1,
+    "id": "bugbash",
+    "version": "1.0.15",
+    "name": "Bug bash manager",
+    "description": "Easier way to manage bug bashes",
+    "publisher": "mohitbagra",
+    "public": false,
+    "icons": {
+        "default": "img/logo.png"
+    },
+    "scopes": [
+    	"vso.work",
+        "vso.work_write"
+	 ],
+    "targets": [
+        {
+            "id": "Microsoft.VisualStudio.Services"
+        }
+    ],
+    "tags": [
+        "Work Item"
+    ],
+    "content": {
+        "details": {
+            "path": "README.md"
+        }
+    },
+     "links": {
+        "home": {
+            "uri": "https://github.com/mohitbagra/vsts-extensions-bugbash"
+        },
+        "getstarted": {
+            "uri": "https://github.com/mohitbagra/vsts-extensions-bugbash"
+        },
+        "learn": {
+            "uri": "https://github.com/mohitbagra/vsts-extensions-bugbash"
+        },
+        "repository": {
+            "uri": "https://github.com/mohitbagra/vsts-extensions-bugbash"
+        },
+        "issues": {
+            "uri": "https://github.com/mohitbagra/vsts-extensions-bugbash/issues"
+        },
+        "support": {
+            "uri": "https://github.com/mohitbagra/vsts-extensions-bugbash/issues"
+        }
+    },
+    "branding": {
+        "color": "#5C2D91",
+        "theme": "dark"
+    },
+    "files": [
+        {
+            "path": "img",
+            "addressable": true
+        },
+        {
+            "path": "scripts",
+            "addressable": true
+        },        
+        {
+            "path": "css",
+            "addressable": true
+        },
+        {
+            "path": "index.html",
+            "addressable": true
+        }
+    ],
+    "categories": [
+        "Plan and track"
+    ],
+    "contributions": [        
+        {
+            "id": "bugbash-hub",
+            "type": "ms.vss-web.hub",
+            "description": "Work item form one click group",
+            "targets": [
+                "ms.vss-work-web.work-hub-group"
+            ],
+            "properties": {
+                "name": "Bug Bash",
+                "uri": "index.html"
+            }
+        }
+    ]
+}

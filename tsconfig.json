@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "module": "umd",
+        "moduleResolution": "node",
+        "sourceMap": false,
+        "target": "es5",
+        "lib": ["dom", "es2015.promise", "es5"],
+        "jsx": "react",
+        "experimentalDecorators": true
+    }
+}
