@@ -2,14 +2,14 @@ import * as React from "react";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 
-import { UrlActions, IHubContext } from "../Models";
+import { UrlActions } from "../Models";
 
 export interface INewBugBashButtonProps {
-    context: IHubContext;
+
 }
 
 export class NewBugBashButton extends React.Component<INewBugBashButtonProps, void> {
-    constructor(props: INewBugBashButtonProps, context: IHubContext) {
+    constructor(props: INewBugBashButtonProps, context: any) {
         super(props, context);
     }
 

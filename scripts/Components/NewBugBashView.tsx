@@ -9,12 +9,7 @@ import { Loading } from "./Loading";
 export class NewBugBashView extends HubView {
     
     public render(): JSX.Element {
-        if (this.state.loadingState === LoadingState.Loading) {
-            return <Loading />;
-        }
-        else {
-            return <div>New</div>;
-        }
+        return <div>New</div>;
     }
 
     protected initialize(): void {

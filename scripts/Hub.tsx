@@ -12,7 +12,7 @@ import { NewBugBashView } from "./Components/NewBugBashView";
 import { EditBugBashView } from "./Components/EditBugBashView";
 import { ViewBugBashView } from "./Components/ViewBugBashView";
 
-import { UrlActions, IHubContext, HubContextPropTypes } from "./Models";
+import { UrlActions, IHubContext } from "./Models";
 import { ActionsCreator, ActionsHub } from "./Actions/ActionsCreator";
 import { StoresHub } from "./Stores/StoresHub";
 
@@ -34,8 +34,6 @@ export interface IHubState {
 }
 
 export class Hub extends React.Component<IHubProps, IHubState> {
-    static childContextTypes = HubContextPropTypes;
-
     private _context: IHubContext;
 
     constructor(props: IHubProps, context?: any) {
@@ -52,10 +50,6 @@ export class Hub extends React.Component<IHubProps, IHubState> {
         };     
     }
 
-    public getChildContext(): IHubContext {
-        return this._context;
-    }
-
     public componentDidMount() {
         this._initialize();
     }
@@ -70,13 +64,13 @@ export class Hub extends React.Component<IHubProps, IHubState> {
         }
         switch (this.state.hubViewMode) {            
             case HubViewMode.All:
-                return <AllBugBashesView />;
+                return <AllBugBashesView context={this._context} />;
             case HubViewMode.New:
-                return <NewBugBashView />;
+                return <NewBugBashView context={this._context} />;
             case HubViewMode.Edit:
-                return <EditBugBashView id={this.state.id} />;
+                return <EditBugBashView context={this._context} id={this.state.id} />;
             case HubViewMode.View:
-                return <ViewBugBashView id={this.state.id} />;
+                return <ViewBugBashView context={this._context} id={this.state.id} />;
             default:
                 return <Loading />;
         }

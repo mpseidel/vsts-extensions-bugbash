@@ -21,6 +21,9 @@ export class BugBashItemStore extends Store implements IBugBashItemStore {
         this._items = null;
 
         actions.InitializeBugBashItems.addListener((items: IBugBash[]) => {
+            if (!items) {
+                this.emitChanged();
+            }
             this._onAdd(items);
         });
         

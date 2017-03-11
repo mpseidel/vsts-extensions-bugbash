@@ -60,6 +60,16 @@
                 }]
             }
         },
+        sass: {
+            dist: {
+                options: {
+                    style: "expanded"
+                },
+                files: {
+                    "css/index.css": "css/index.scss"
+                }
+            }
+        },
         cssmin: {
             target: {
                 files: {
@@ -102,6 +112,7 @@
 
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-copy");
+    grunt.loadNpmTasks('grunt-contrib-sass');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-concat');
@@ -112,8 +123,8 @@
     grunt.registerTask("install", ["typings:install"]);
     grunt.registerTask("copy_files", ["copy:root", "copy:img", "copy:libs"]);
 
-    grunt.registerTask("build", ["clean:build", "copy_files", "cssmin:target", "ts:build", "uglify:scripts", "clean:temp"]);
-    grunt.registerTask("build_dev", ["clean:build", "copy_files", "cssmin:target", "ts:build", "copy:js", "clean:temp"]);
+    grunt.registerTask("build", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "uglify:scripts", "clean:temp"]);
+    grunt.registerTask("build_dev", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "copy:js", "clean:temp"]);
 
     grunt.registerTask("package", ["build", "exec:package"]);
     grunt.registerTask("package_dev", ["build_dev", "exec:package"]);

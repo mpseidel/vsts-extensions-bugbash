@@ -1,0 +1,49 @@
+/*
+** Layout
+*/
+#ext-container, #ext-container .all-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;    
+}
+
+#ext-container {
+    margin: 17px 20px;
+}
+
+#ext-container .all-view .all-view-contents {
+    margin-top: 50px;
+}
+
+/*
+** Create New Button
+*/
+.create-new-button {
+    float: right;
+    width: 120px;
+    background-color: #0078d7;
+    border-color: #0078d7;
+    color: #ffffff;
+    height: 32px;
+    line-height: 32px;
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.create-new-button:hover,
+.create-new-button:focus {
+    background-color: #005a9e;
+    border-color: #005a9e;
+}
+
+/*
+** Message Panel
+*/
+.message-panel {
+    
+}
