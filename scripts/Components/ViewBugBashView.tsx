@@ -4,12 +4,15 @@ import { autobind } from "../OfficeFabric/Utilities";
 import { CommandBar } from "../OfficeFabric/CommandBar";
 import { Label } from "../OfficeFabric/Label";
 import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
+import { TextField } from "../OfficeFabric/TextField";
+import { Button, ButtonType } from "../OfficeFabric/Button";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
-import { WorkItemQueryResult, Wiql, WorkItem } from "TFS/WorkItemTracking/Contracts";
+import { WorkItemQueryResult, Wiql, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
 import { WorkItemFormNavigationService } from "TFS/WorkItemTracking/Services";
 import Utils_Date = require("VSS/Utils/Date");
+import {JsonPatchDocument, JsonPatchOperation, Operation} from "VSS/WebApi/Contracts";
 
 import { UrlActions, IBugBash, LoadingState } from "../Models";
 import { HubView, IHubViewState, IHubViewProps } from "./HubView";
@@ -21,6 +24,7 @@ export class ViewBugBashView extends HubView {
     private _resultsLoaded: boolean;
     private _resultsLoading: boolean;
     private _workItems: WorkItem[];
+    private _newWorkItemFieldValues: IDictionaryStringTo<string>;
 
     public render(): JSX.Element {
         if (this.state.loadingState === LoadingState.Loading) {
@@ -31,18 +35,19 @@ export class ViewBugBashView extends HubView {
                 return <MessagePanel message="This instance of bug bash doesnt exist." messageType={MessageType.Error} />
             }
             else {
+                const item = this.state.items[0];
                 let menuitems: IContextualMenuItem[] = [
                     {
                         key: "edit", name: "Edit", title: "Edit", iconProps: {iconName: "Edit"},
-                        onClick: async (event?: React.MouseEvent<HTMLElement>, item?: IContextualMenuItem) => {
+                        onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                             let navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
                             navigationService.updateHistoryEntry(UrlActions.ACTION_EDIT, {id: this.props.id});
                         }
                     },            
                     {
                         key: "refresh", name: "Refresh", title: "Refresh list", iconProps: {iconName: "Refresh"},
-                        onClick: async (event?: React.MouseEvent<HTMLElement>, item?: IContextualMenuItem) => {
-                            this._refreshResults(this.state.items[0]);
+                        onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                            this._refreshResults(item);
                             this.setState(this.getStateFromStore());
                         }
                     }
@@ -61,7 +66,9 @@ export class ViewBugBashView extends HubView {
                                 ) }
                             </div>
                             <div className="add-workitem-contents">
-                                <Label>Add bug</Label>
+                                <Label className="add-workitem-label">Add bug</Label>
+                                {this._getManualFieldsNode()}
+                                <Button className="create-new-button" disabled={!this._canSaveWorkItem()} buttonType={ButtonType.primary} onClick={this._onSaveClick}>Save</Button>
                             </div>
                         </div>
                     </div>
@@ -134,6 +141,85 @@ export class ViewBugBashView extends HubView {
     private async _onWorkItemClick(e: React.MouseEvent<HTMLElement>, item: WorkItem) {
         let workItemNavSvc = await WorkItemFormNavigationService.getService();
         workItemNavSvc.openWorkItem(item.id);
+    }
+
+    @autobind
+    private async _onSaveClick() {
+        const item: IBugBash = this.state.items[0];
+        this._newWorkItemFieldValues = this._newWorkItemFieldValues || {};
+
+        if (!this._canSaveWorkItem()) {
+            return;
+        }
+
+        // load template
+        if (item.templateId) {
+            let templateRef = this.props.context.stores.workItemTemplateStore.getItem(item.templateId)
+            let template = await WitClient.getClient().getTemplate(VSS.getWebContext().project.id, VSS.getWebContext().team.id, templateRef.id);            
+            this._newWorkItemFieldValues = { ...this._newWorkItemFieldValues, ...template.fields };
+        }
+
+        // save work item
+        let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
+        for (let fieldRefName in this._newWorkItemFieldValues) {
+            patchDocument.push({
+                op: Operation.Add,
+                path: `/fields/${fieldRefName}`,
+                value: this._newWorkItemFieldValues[fieldRefName]
+            } as JsonPatchOperation);
+        }
+        patchDocument.push({
+            op: Operation.Add,
+            path: `/fields/System.Tags`,
+            value: item.workItemTag
+        } as JsonPatchOperation);
+
+        await WitClient.getClient().createWorkItem(patchDocument, VSS.getWebContext().project.id, "Bug");
+
+        this._newWorkItemFieldValues = {};
+        this._refreshResults(item);
+        this.setState(this.getStateFromStore());
+    }
+
+    @autobind
+    private _canSaveWorkItem(): boolean {
+        const item: IBugBash = this.state.items[0];
+        for (let manualField of item.manualFields) {
+            if (!this._newWorkItemFieldValues[manualField]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private _getManualFieldsNode(): React.ReactNode {
+        const item: IBugBash = this.state.items[0];
+        this._newWorkItemFieldValues = this._newWorkItemFieldValues || {};
+
+        return item.manualFields.map((fieldRefName: string) => {
+            const field = this.props.context.stores.workItemFieldItemStore.getItem(fieldRefName);
+            if (field) {
+                return (
+                    <div className="manual-field-row" key={fieldRefName}>
+                        <TextField label={field.name} 
+                            value={this._newWorkItemFieldValues[fieldRefName]}
+                            required={true} 
+                            inputClassName={field.type === FieldType.PlainText || field.type === FieldType.Html ? "editor-textarea" : "editor-textfield"}
+                            multiline={field.type === FieldType.PlainText || field.type === FieldType.Html}
+                            onChanged={(newValue: string) => this._setWorkItemFieldValue(fieldRefName, newValue)} />
+                    </div>
+                );
+            }
+            else {
+                return <div />
+            }        
+        });
+    }
+
+    @autobind
+    private _setWorkItemFieldValue(fieldRefName: string, value: string) {
+        this._newWorkItemFieldValues[fieldRefName] = value;
+        this.setState(this.getStateFromStore());
     }
 
     private async _refreshResults(item: IBugBash) {

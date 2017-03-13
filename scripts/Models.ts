@@ -41,7 +41,15 @@ export interface IBugBash {
     manualFields: string[];
     description?: string;    
     startTime?: Date;
-    endTime?: Date; 
+    endTime?: Date;
+    reccurence: BugBashRecurrence;
+}
+
+export enum BugBashRecurrence {
+    None = 0,
+    Daily,
+    Weekly,
+    Monthly
 }
 
 export enum LoadingState {

@@ -169,6 +169,21 @@
     .add-workitem-contents {
         margin-top: 30px;
         margin-left: 20px;
+        width: 30%;
+
+        .add-workitem-label {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .manual-field-row {
+            margin-bottom: 10px;
+
+            .editor-textarea {
+                height: 200px !important;
+            }
+        }
     }
 
     .results-view-contents {

@@ -4,6 +4,8 @@ import { CommandBar } from "../OfficeFabric/CommandBar";
 import { DatePicker } from "../OfficeFabric/DatePicker";
 import { Label } from "../OfficeFabric/Label";
 import { Dropdown } from "../OfficeFabric/components/Dropdown/Dropdown";
+import { ChoiceGroup } from "../OfficeFabric/components/ChoiceGroup/ChoiceGroup";
+import { IChoiceGroupOption } from "../OfficeFabric/components/ChoiceGroup/ChoiceGroup.Props";
 import { IDropdownOption } from "../OfficeFabric/components/Dropdown/Dropdown.Props";
 import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 import { TagPicker, ITag } from '../OfficeFabric/components/pickers/TagPicker/TagPicker';
@@ -14,7 +16,7 @@ import { WorkItemTemplateReference, WorkItemField } from "TFS/WorkItemTracking/C
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 
-import { IBugBash, IBaseProps, LoadingState, UrlActions } from "../Models";
+import { IBugBash, IBaseProps, LoadingState, UrlActions, BugBashRecurrence } from "../Models";
 import { BugBash } from "../BugBash";
 import { Loading } from "./Loading";
 
@@ -173,6 +175,17 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
             tagPickerClassName += " invalid";
         }
 
+        let recurrenceChoices: IChoiceGroupOption[]  = [];
+        for (let enumMember in BugBashRecurrence) {
+            if (!isNaN(parseInt(enumMember))) {
+                recurrenceChoices.push({
+                    key: `${enumMember}`,
+                    text: BugBashRecurrence[enumMember],
+                    checked: parseInt(enumMember) === model.reccurence
+                });
+            }
+        }
+
         return (
             <div className="editor-view">
                 <div className="editor-view-menu">
@@ -184,6 +197,11 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                     <TextField label='Work item tag' required={true} value={model.workItemTag} onChanged={(newValue: string) => this._item.updateWorkItemTag(newValue)} onGetErrorMessage={this._getTagError} />
                     <DatePicker label="Start Date" allowTextInput={true} isRequired={false} value={model.startTime} onSelectDate={(newValue: Date) => this._item.updateStartTime(newValue)} />
                     <DatePicker label="Finish Date" allowTextInput={true} isRequired={false} value={model.endTime} onSelectDate={(newValue: Date) => this._item.updateEndTime(newValue)} />
+                    <ChoiceGroup
+                        label="Reccurence"
+                        options={recurrenceChoices}
+                        onChange={(e, option: IChoiceGroupOption) => this._item.updateRecurrence(parseInt(option.key))}
+                    />
                     <Dropdown label="Work item template" options={templateItems} onChanged={(option: IDropdownOption) => this._item.updateTemplate(option.key as string)} />
                     <Label required={true}>Manually entered fields</Label>
                     <TagPicker className={tagPickerClassName}

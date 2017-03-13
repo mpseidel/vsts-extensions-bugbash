@@ -15,5 +15,6 @@
         "dist/**/*": true,
         "scripts/microsoft/**/*": true,
         "scripts/uifabric/**/*": true
-    }
+    },
+    "vsicons.presets.angular": false
 }

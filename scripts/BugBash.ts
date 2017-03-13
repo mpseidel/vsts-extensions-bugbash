@@ -1,4 +1,4 @@
-import {  IBugBash } from "./Models";
+import {  IBugBash, BugBashRecurrence } from "./Models";
 
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
@@ -12,7 +12,8 @@ export class BugBash {
             __etag: 0,
             workItemTag: "",
             templateId: "",
-            manualFields: []
+            manualFields: [],
+            reccurence: BugBashRecurrence.None
         });
     }
 
@@ -49,6 +50,7 @@ export class BugBash {
             || !Utils_String.equals(this._model.workItemTag, this._originalModel.workItemTag)
             || !Utils_Date.equals(this._model.startTime, this._originalModel.startTime)
             || !Utils_Date.equals(this._model.endTime, this._originalModel.endTime)
+            || this._model.reccurence !== this._originalModel.reccurence
             || !Utils_String.equals(this._model.templateId, this._originalModel.templateId)
             || !Utils_Array.arrayEquals(this._model.manualFields, this._originalModel.manualFields, (item1: string, item2: string) => Utils_String.equals(item1, item2, true))
     }
@@ -107,6 +109,11 @@ export class BugBash {
 
     public updateManualFields(fieldNames: string[]) {
         this._model.manualFields = fieldNames;
+        this.fireChanged();
+    }
+
+    public updateRecurrence(recurrence: BugBashRecurrence) {
+        this._model.reccurence = recurrence;
         this.fireChanged();
     }
 }

@@ -5,7 +5,7 @@ import { autobind } from "../OfficeFabric/Utilities";
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import Utils_Date = require("VSS/Utils/Date");
 
-import { UrlActions, IBugBash, LoadingState } from "../Models";
+import { UrlActions, IBugBash, LoadingState, BugBashRecurrence } from "../Models";
 import { HubView, IHubViewState, IHubViewProps } from "./HubView";
 import { Loading } from "./Loading";
 
@@ -56,6 +56,7 @@ export class AllBugBashesView extends HubView {
             <div className="instance-row">
                 <div className="instance-title" onClick={() => this._onRowClick(item)}>{ item.title }</div>
                 <div className="instance-info">
+                    <div className="instance-info-cell-container"><div className="instance-info-cell">Recurrence:</div><div className="instance-info-cell-info">{BugBashRecurrence[item.reccurence]}</div></div>
                     <div className="instance-info-cell-container"><div className="instance-info-cell">Work item tag:</div><div className="instance-info-cell-info">{item.workItemTag}</div></div>
                     { item.startTime && (<div className="instance-info-cell-container"><div className="instance-info-cell">Start:</div><div className="instance-info-cell-info">{Utils_Date.format(item.startTime, "dddd, MMMM dd, yyyy")}</div></div>) }
                     { item.endTime && (<div className="instance-info-cell-container"><div className="instance-info-cell">End:</div><div className="instance-info-cell-info">{Utils_Date.format(item.endTime, "dddd, MMMM dd, yyyy")}</div></div>) }
