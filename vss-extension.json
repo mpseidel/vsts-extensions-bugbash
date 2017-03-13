@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "bugbash",
-    "version": "1.0.41",
+    "version": "1.0.80",
     "name": "Bug bash manager",
     "description": "Easier way to manage bug bashes",
     "publisher": "mohitbagra",

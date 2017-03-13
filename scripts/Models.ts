@@ -34,14 +34,14 @@ export module Constants {
 
 export interface IBugBash {
     id: string,
-    title: string;    
-    __etag: number;
-    workItemIds: number[];
-    initialFieldValues: IDictionaryStringTo<Object>;
+    title: string;
+    readonly __etag: number;
+    workItemTag: string;
+    templateId: string;
     manualFields: string[];
     description?: string;    
     startTime?: Date;
-    endTime?: string;    
+    endTime?: Date; 
 }
 
 export enum LoadingState {

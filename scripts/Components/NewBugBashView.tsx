@@ -2,21 +2,25 @@ import * as React from "react";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 
-import { UrlActions, IHubContext, IBugBash, LoadingState } from "../Models";
+import { UrlActions, IBugBash, LoadingState } from "../Models";
 import { HubView, IHubViewState, IHubViewProps } from "./HubView";
 import { Loading } from "./Loading";
+import { MessagePanel, MessageType } from "./MessagePanel";
+import { BugBashEditor, IBugBashEditorProps } from "./BugBashEditor";
 
-export class NewBugBashView extends HubView {
-    
+export class NewBugBashView extends HubView {    
     public render(): JSX.Element {
-        return <div>New</div>;
+        return <BugBashEditor context={this.props.context} />;
     }
 
-    protected initialize(): void {
+    protected initialize() {
         
     }
 
     protected getStateFromStore(): IHubViewState {
-        return null;
+        return {
+            items: [],
+            loadingState: LoadingState.Loaded
+        };
     }
 }

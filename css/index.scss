@@ -74,3 +74,179 @@
     margin-right: auto;
     width: 10%;
 }
+
+.editor-view {
+    .editor-view-contents {
+        .field-picker {
+            border: 1px solid #c8c8c8;
+
+            &.invalid {
+                border-color: #a80000;
+            }
+        }
+
+        .manual-fields-error {
+            font-size: 12px;
+            font-weight: 400;
+            color: #a80000;
+            margin: 0;
+            margin-top: 5px;
+        }
+
+        .editor-textarea {
+            height: 200px !important;
+        }
+    }
+}
+
+.all-view {
+    .instance-list {
+        .instance-row {
+            padding: 10px;
+            border-bottom: 1px solid #eaeaea;
+
+            &:hover {
+                background: #EEE;
+            }
+
+            .instance-title {
+                font-size: 21px;
+                font-weight: 100;
+                line-height: 30px;
+                margin-bottom: 5px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                word-wrap: normal;
+                width: 100%;
+                cursor: pointer;
+
+                &:hover {
+                    color: #106ebe;
+                    text-decoration: underline;                    
+                }
+            }
+
+            .instance-info {
+                font-size: 12px;
+                
+                .instance-info-cell-container {
+                    width: 300px;
+                    display: inline-block;
+                    margin-right: 10px;
+
+                    .instance-info-cell {
+                        font-weight: 400;
+                        float: left;
+                        width: auto;
+                        overflow: hidden;
+                        display: block;
+                        margin-right: 5px;
+                    }
+
+                    .instance-info-cell-info {
+                        color: #a6a6a6;
+                        white-space: nowrap;
+                        word-wrap: normal;
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                        width: auto;
+                        overflow: hidden;
+                        display: block;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.results-view {
+    .contents {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .add-workitem-contents {
+        margin-top: 30px;
+        margin-left: 20px;
+    }
+
+    .results-view-contents {
+        margin-top: 20px;
+        width: 70%;
+        border-right: 1px solid #ccc;
+
+        .workitem-list {
+            .workitem-row {
+                padding: 10px;
+                border-bottom: 1px solid #eaeaea;
+
+                &:hover {
+                    background: #EEE;
+                }
+
+                .workitem-title, .workitem-id {
+                    font-size: 21px;
+                    font-weight: 100;
+                    line-height: 30px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    word-wrap: normal;                                    
+                }
+
+                .workitem-title {
+                    display: block;
+                    overflow: hidden;
+                    width: auto;
+                    margin-left: 20px;
+                }
+
+                .workitem-id {
+                    font-weight: 300;
+                    float: left;
+                    display: block;
+                    overflow: hidden;
+                    width: auto;
+                    cursor: pointer;
+
+                    &:hover {
+                        color: #106ebe;
+                        text-decoration: underline;                    
+                    }
+                }
+
+                .workitem-info {
+                    font-size: 12px;
+                    margin-top: 5px;
+
+                    .workitem-info-cell-container {
+                        width: 300px;
+                        display: inline-block;
+                        margin-right: 10px;
+
+                        .workitem-info-cell {
+                            font-weight: 400;
+                            float: left;
+                            width: auto;
+                            overflow: hidden;
+                            display: block;
+                            margin-right: 5px;
+                        }
+
+                        .workitem-info-cell-info {
+                            color: #a6a6a6;
+                            white-space: nowrap;
+                            word-wrap: normal;
+                            text-overflow: ellipsis;
+                            overflow: hidden;
+                            width: auto;
+                            overflow: hidden;
+                            display: block;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
