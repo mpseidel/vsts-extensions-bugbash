@@ -42,9 +42,26 @@
                         flatten: true, 
                         src: [
                             "node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js", 
-                            "node_modules/es6-promise/dist/promise-0.1.2.min.js"
+                            "node_modules/es6-promise/dist/promise-0.1.2.min.js",
+                            "node_modules/bootstrap/dist/js/bootstrap.min.js",
+                            "node_modules/summernote/dist/summernote.min.js",
+                            "node_modules/jquery/dist/jquery.min.js"
                         ], 
                         dest: "dist/scripts/lib",
+                        filter: "isFile" 
+                    },
+                    {
+                        expand: true, 
+                        flatten: true, 
+                        src: ["node_modules/bootstrap/dist/css/bootstrap.min.css", "node_modules/summernote/dist/summernote.css"], 
+                        dest: "dist/css/lib",
+                        filter: "isFile" 
+                    },
+                    {
+                        expand: true, 
+                        flatten: true, 
+                        src: ["node_modules/summernote/dist/font/*"], 
+                        dest: "dist/css/lib/font",
                         filter: "isFile" 
                     },
                     {

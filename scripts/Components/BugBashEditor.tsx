@@ -15,6 +15,8 @@ import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import { WorkItemTemplateReference, WorkItemField } from "TFS/WorkItemTracking/Contracts";
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
+import { RichEditor } from "VSS/Controls/RichEditor";
+import { BaseControl } from "VSS/Controls";
 
 import { IBugBash, IBaseProps, LoadingState, UrlActions, BugBashRecurrence } from "../Models";
 import { BugBash } from "../BugBash";
@@ -35,7 +37,7 @@ export interface IBugBashEditorState {
 
 export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBashEditorState> {
     private _item: BugBash;
-    private _richControlContainer: JQuery;
+    private _richEditor: RichEditor;
 
     constructor(props: IBugBashEditorProps, context: any) {
         super(props, context);
@@ -192,34 +194,69 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                     <CommandBar items={menuitems} />
                 </div>
                 <div className="editor-view-contents">
-                    <TextField label='Title' required={true} value={model.title} onChanged={(newValue: string) => this._item.updateTitle(newValue)} onGetErrorMessage={this._getTitleError} />
-                    <TextField inputClassName="editor-textarea" label='Description' multiline={true} required={false} value={model.description} onChanged={(newValue: string) => this._item.updateDescription(newValue)} />
-                    <TextField label='Work item tag' required={true} value={model.workItemTag} onChanged={(newValue: string) => this._item.updateWorkItemTag(newValue)} onGetErrorMessage={this._getTagError} />
-                    <DatePicker label="Start Date" allowTextInput={true} isRequired={false} value={model.startTime} onSelectDate={(newValue: Date) => this._item.updateStartTime(newValue)} />
-                    <DatePicker label="Finish Date" allowTextInput={true} isRequired={false} value={model.endTime} onSelectDate={(newValue: Date) => this._item.updateEndTime(newValue)} />
-                    <ChoiceGroup
-                        label="Reccurence"
-                        options={recurrenceChoices}
-                        onChange={(e, option: IChoiceGroupOption) => this._item.updateRecurrence(parseInt(option.key))}
-                    />
-                    <Dropdown label="Work item template" options={templateItems} onChanged={(option: IDropdownOption) => this._item.updateTemplate(option.key as string)} />
-                    <Label required={true}>Manually entered fields</Label>
-                    <TagPicker className={tagPickerClassName}
-                        defaultSelectedItems={model.manualFields.map(f => this._getFieldTag(f))}
-                        onResolveSuggestions={this._onFieldFilterChanged}
-                        getTextFromItem={item => item.name}
-                        onChange={items => this._item.updateManualFields(items.map(item => item.key))}
-                        pickerSuggestionsProps={
-                            {
-                                suggestionsHeaderText: 'Suggested Fields',
-                                noResultsFoundText: 'No fields Found'
-                            }
-                        }
-                    />
-                    { model.manualFields.length == 0 && (<div className="manual-fields-error">Atleast one field must be manually entered.</div>) }
+                    <div className="first-section">
+                        <TextField label='Title' required={true} value={model.title} onChanged={(newValue: string) => this._item.updateTitle(newValue)} onGetErrorMessage={this._getTitleError} />
+                        <Label>Description</Label>
+                        <div>
+                            <div ref={this._renderRichEditor}/>
+                        </div>
+                    </div>
+                    <div className="section-wrapper">
+                        <div className="second-section">                    
+                            <DatePicker label="Start Date" allowTextInput={true} isRequired={false} value={model.startTime} onSelectDate={(newValue: Date) => this._item.updateStartTime(newValue)} />
+                            <DatePicker label="Finish Date" allowTextInput={true} isRequired={false} value={model.endTime} onSelectDate={(newValue: Date) => this._item.updateEndTime(newValue)} />
+                            <ChoiceGroup
+                                label="Reccurence"
+                                options={recurrenceChoices}
+                                onChange={(e, option: IChoiceGroupOption) => this._item.updateRecurrence(parseInt(option.key))}
+                            />
+                        </div>
+                        <div className="third-section">
+                            <TextField label='Work item tag' required={true} value={model.workItemTag} onChanged={(newValue: string) => this._item.updateWorkItemTag(newValue)} onGetErrorMessage={this._getTagError} />
+                            <Dropdown label="Work item template" options={templateItems} onChanged={(option: IDropdownOption) => this._item.updateTemplate(option.key as string)} />
+                            <Label required={true}>Manually entered fields</Label>
+                            <TagPicker className={tagPickerClassName}
+                                defaultSelectedItems={model.manualFields.map(f => this._getFieldTag(f))}
+                                onResolveSuggestions={this._onFieldFilterChanged}
+                                getTextFromItem={item => item.name}
+                                onChange={items => this._item.updateManualFields(items.map(item => item.key))}
+                                pickerSuggestionsProps={
+                                    {
+                                        suggestionsHeaderText: 'Suggested Fields',
+                                        noResultsFoundText: 'No fields Found'
+                                    }
+                                }
+                            />
+                            { model.manualFields.length == 0 && (<div className="manual-fields-error">Atleast one field must be manually entered.</div>) }
+                        </div>
+                    </div>
                 </div>
             </div>
         );
+    }
+
+    @autobind
+    private _renderRichEditor(container: HTMLElement) {
+        $(container).summernote({
+            height: 200,
+            minHeight: 200,
+            toolbar: [
+                // [groupName, [list of button]]
+                ['style', ['bold', 'italic', 'underline', 'clear']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link', 'picture']],
+                ['fullscreen', ['fullscreen']]
+            ],
+            callbacks: {
+                onBlur: () => {
+                    this._item.updateDescription($(container).summernote('code'));
+                }
+            }
+        });
+
+        $(container).summernote('code', this.state.model.description);
     }
 
     @autobind
@@ -233,9 +270,10 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
     @autobind
     private _onFieldFilterChanged(filterText: string, tagList: ITag[]) {
         return filterText
-            ? this.state.fields.filter(field => field.name.toLowerCase().indexOf(filterText.toLowerCase()) === 0 && !tagList[field.referenceName]).map(field => {
-                return { key: field.referenceName, name: field.name};
-            }) 
+            ? this.state.fields.filter(field => field.name.toLowerCase().indexOf(filterText.toLowerCase()) === 0 
+                && Utils_Array.findIndex(tagList, (tag: ITag) => Utils_String.equals(tag.key, field.referenceName, true)) === -1).map(field => {
+                    return { key: field.referenceName, name: field.name};
+                }) 
             : [];
     }
 

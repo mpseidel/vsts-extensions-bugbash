@@ -201,12 +201,20 @@ export class ViewBugBashView extends HubView {
             if (field) {
                 return (
                     <div className="manual-field-row" key={fieldRefName}>
+                        { field.type !== FieldType.PlainText && field.type !== FieldType.Html && (
                         <TextField label={field.name} 
                             value={this._newWorkItemFieldValues[fieldRefName]}
                             required={true} 
-                            inputClassName={field.type === FieldType.PlainText || field.type === FieldType.Html ? "editor-textarea" : "editor-textfield"}
-                            multiline={field.type === FieldType.PlainText || field.type === FieldType.Html}
                             onChanged={(newValue: string) => this._setWorkItemFieldValue(fieldRefName, newValue)} />
+                        )}
+                        { field.type === FieldType.PlainText || field.type === FieldType.Html && (
+                        <div>
+                            <Label>{field.name}</Label>
+                            <div>
+                                <div ref={(container: HTMLElement) => this._renderRichEditor(container, fieldRefName)}/>
+                            </div>
+                        </div>
+                        )}
                     </div>
                 );
             }
@@ -214,6 +222,30 @@ export class ViewBugBashView extends HubView {
                 return <div />
             }        
         });
+    }
+
+    @autobind
+    private _renderRichEditor(container: HTMLElement, fieldRefName: string) {
+        $(container).summernote({
+            height: 200,
+            minHeight: 200,
+            toolbar: [
+                // [groupName, [list of button]]
+                ['style', ['bold', 'italic', 'underline', 'clear']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link', 'picture']],
+                ['fullscreen', ['fullscreen']]
+            ],
+            callbacks: {
+                onBlur: () => {
+                    this._setWorkItemFieldValue(fieldRefName, $(container).summernote('code'));
+                }
+            }
+        });
+
+        $(container).summernote('code', this._newWorkItemFieldValues[fieldRefName]);
     }
 
     @autobind
