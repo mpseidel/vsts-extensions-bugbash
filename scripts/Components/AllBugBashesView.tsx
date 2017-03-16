@@ -12,7 +12,11 @@ import { Loading } from "./Loading";
 import { NewBugBashButton } from "./NewBugBashButton";
 import { MessagePanel, MessageType } from "./MessagePanel";
 
-export class AllBugBashesView extends HubView {
+interface IAllHubViewState extends IHubViewState {
+    items: IBugBash[];
+}
+
+export class AllBugBashesView extends HubView<IAllHubViewState> {
     
     public render(): JSX.Element {
         return (
@@ -43,7 +47,7 @@ export class AllBugBashesView extends HubView {
         this.props.context.actionsCreator.initializeAllBugBashes();
     }
 
-    protected getStateFromStore(): IHubViewState {
+    protected getStateFromStore(): IAllHubViewState {
         return {
             items: this.props.context.stores.bugBashItemStore.getAll(),
             loadingState: this.props.context.stores.bugBashItemStore.isLoaded() ? LoadingState.Loaded : LoadingState.Loading

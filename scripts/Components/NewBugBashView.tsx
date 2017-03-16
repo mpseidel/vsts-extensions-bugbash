@@ -8,7 +8,11 @@ import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { BugBashEditor, IBugBashEditorProps } from "./BugBashEditor";
 
-export class NewBugBashView extends HubView {    
+interface INewHubViewState extends IHubViewState {
+
+}
+
+export class NewBugBashView extends HubView<INewHubViewState> {    
     public render(): JSX.Element {
         return <BugBashEditor context={this.props.context} />;
     }
@@ -17,9 +21,8 @@ export class NewBugBashView extends HubView {
         
     }
 
-    protected getStateFromStore(): IHubViewState {
+    protected getStateFromStore(): INewHubViewState {
         return {
-            items: [],
             loadingState: LoadingState.Loaded
         };
     }

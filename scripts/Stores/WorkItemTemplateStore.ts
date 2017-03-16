@@ -27,6 +27,10 @@ export class WorkItemTemplateStore extends Store implements IWorkItemTemplateSto
             }
             this._onAdd(items);
         });
+
+        actions.TemplateItemAdded.addListener((item: WorkItemTemplateReference) => {
+            this._onAdd(item);
+        });
     }
 
     public isLoaded(): boolean {

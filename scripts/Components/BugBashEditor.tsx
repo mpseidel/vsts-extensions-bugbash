@@ -162,7 +162,12 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
             },
         ];
 
-        let emptyTemplateItem = [{ key: "", index: 0, text: "<No template>", selected: !model.templateId }];
+        let emptyTemplateItem = [
+            {   
+                key: "", index: 0, text: "<No template>", 
+                selected: !model.templateId
+            }
+        ];
         let templateItems: IDropdownOption[] = emptyTemplateItem.concat(this.state.templates.map((template: WorkItemTemplateReference, index: number) => {
             return {
                 key: template.id,

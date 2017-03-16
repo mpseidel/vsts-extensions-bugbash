@@ -8,17 +8,21 @@ import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { BugBashEditor, IBugBashEditorProps } from "./BugBashEditor";
 
-export class EditBugBashView extends HubView {    
+interface IEditHubViewState extends IHubViewState {
+    item: IBugBash;
+}
+
+export class EditBugBashView extends HubView<IEditHubViewState> {    
     public render(): JSX.Element {
         if (this.state.loadingState === LoadingState.Loading) {
             return <Loading />;
         }
         else {
-            if (!this.state.items) {
+            if (!this.state.item) {
                 return <MessagePanel message="This instance of bug bash doesnt exist." messageType={MessageType.Error} />
             }
             else {
-                return <BugBashEditor id={this.state.items[0].id} context={this.props.context} />;
+                return <BugBashEditor id={this.state.item.id} context={this.props.context} />;
             }            
         }
     }
@@ -27,16 +31,16 @@ export class EditBugBashView extends HubView {
         let found = await this.props.context.actionsCreator.ensureBugBash(this.props.id);
         if (!found) {
             this.setState({
-                items: null,
+                item: null,
                 loadingState: LoadingState.Loaded
             });
         }
     }
 
-    protected getStateFromStore(): IHubViewState {
+    protected getStateFromStore(): IEditHubViewState {
         const item = this.props.context.stores.bugBashItemStore.getItem(this.props.id);
         return {
-            items: item ? [item] : null,
+            item: item,
             loadingState: this.props.context.stores.bugBashItemStore.isLoaded() ? LoadingState.Loaded : LoadingState.Loading
         };
     }

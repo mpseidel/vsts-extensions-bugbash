@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
-import { WorkItemTemplateReference, WorkItemField, WorkItem } from "TFS/WorkItemTracking/Contracts";
 
 import { UrlActions, IBaseProps, IBugBash, LoadingState } from "../Models";
 
@@ -10,14 +9,10 @@ export interface IHubViewProps extends IBaseProps {
 }
 
 export interface IHubViewState {
-    items: IBugBash[];
     loadingState: LoadingState;
-    templates?: WorkItemTemplateReference[];
-    fields?: WorkItemField[];
-    workItemResults?: WorkItem[];
 }
 
-export abstract class HubView extends React.Component<IHubViewProps, IHubViewState> {
+export abstract class HubView<T extends IHubViewState> extends React.Component<IHubViewProps, T> {
     constructor(props: IHubViewProps, context: any) {
         super(props, context);
 
@@ -44,5 +39,5 @@ export abstract class HubView extends React.Component<IHubViewProps, IHubViewSta
 
     protected abstract initialize(): void;
 
-    protected abstract getStateFromStore(): IHubViewState;
+    protected abstract getStateFromStore(): T;
 }

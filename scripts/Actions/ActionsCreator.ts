@@ -19,6 +19,7 @@ export class ActionsHub {
     public InitializeFieldItems = new Action<WorkItemField[]>();
 
     public InitializeWorkItemTemplateItems = new Action<WorkItemTemplateReference[]>();
+    public TemplateItemAdded = new Action<WorkItemTemplateReference>();
 }
 
 export class ActionsCreator {
@@ -63,12 +64,36 @@ export class ActionsCreator {
         }
     }
 
+    public async ensureWorkItemTemplate(id: string): Promise<boolean> {
+        if (!this._workItemTemplateItemDataProvider.itemExists(id)) {
+            try {
+                let template = await WitClient.getClient().getTemplate(VSS.getWebContext().project.id, VSS.getWebContext().team.id, id);
+                if (template) {
+                    this._actionsHub.TemplateItemAdded.invoke(template);
+                    return true;
+                }
+            }
+            catch (e) {
+                return false;
+            }
+            return false;
+        }
+        else {
+            return true;
+        }
+    }  
+
     public async ensureBugBash(id: string): Promise<boolean> {
         if (!this._bugBashItemDataProvider.itemExists(id)) {
-            let bugbash = await BugBashManager.readBugBash(id);
-            if (bugbash) {
-                this._actionsHub.BugBashItemAdded.invoke(bugbash);
-                return true;
+            try {
+                let bugbash = await BugBashManager.readBugBash(id);
+                if (bugbash) {
+                    this._actionsHub.BugBashItemAdded.invoke(bugbash);
+                    return true;
+                }
+            }
+            catch (e) {
+                return false;
             }
 
             return false;

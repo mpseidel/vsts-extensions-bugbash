@@ -36,6 +36,23 @@
     }
 }
 
+.overflow-ellipsis {
+    text-overflow: ellipsis;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    word-wrap: normal;
+}
+
+.identity-cell {
+    img {
+        margin-right:2px;
+        vertical-align: top;
+        width: 18px;
+        height: 18px;
+    }
+}
+
 /*
 ** Message Panel
 */
@@ -187,7 +204,7 @@
     .add-workitem-contents {
         margin-top: 30px;
         margin-left: 20px;
-        width: 30%;
+        width: 25%;
 
         .add-workitem-label {
             font-size: 15px;
@@ -202,80 +219,7 @@
 
     .results-view-contents {
         margin-top: 20px;
-        width: 70%;
+        width: 75%;
         border-right: 1px solid #ccc;
-
-        .workitem-list {
-            .workitem-row {
-                padding: 10px;
-                border-bottom: 1px solid #eaeaea;
-
-                &:hover {
-                    background: #EEE;
-                }
-
-                .workitem-title, .workitem-id {
-                    font-size: 21px;
-                    font-weight: 100;
-                    line-height: 30px;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    word-wrap: normal;                                    
-                }
-
-                .workitem-title {
-                    display: block;
-                    overflow: hidden;
-                    width: auto;
-                    margin-left: 20px;
-                }
-
-                .workitem-id {
-                    font-weight: 300;
-                    float: left;
-                    display: block;
-                    overflow: hidden;
-                    width: auto;
-                    cursor: pointer;
-                    color: #106ebe;
-                    
-                    &:hover {                        
-                        text-decoration: underline;                    
-                    }
-                }
-
-                .workitem-info {
-                    font-size: 12px;
-                    margin-top: 5px;
-
-                    .workitem-info-cell-container {
-                        width: 300px;
-                        display: inline-block;
-                        margin-right: 10px;
-
-                        .workitem-info-cell {
-                            font-weight: 400;
-                            float: left;
-                            width: auto;
-                            overflow: hidden;
-                            display: block;
-                            margin-right: 5px;
-                        }
-
-                        .workitem-info-cell-info {
-                            color: #a6a6a6;
-                            white-space: nowrap;
-                            word-wrap: normal;
-                            text-overflow: ellipsis;
-                            overflow: hidden;
-                            width: auto;
-                            overflow: hidden;
-                            display: block;
-                        }
-                    }
-                }
-            }
-        }
     }
 }
