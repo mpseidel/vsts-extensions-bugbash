@@ -29,6 +29,8 @@
         
         // Load main entry point for extension
         VSS.require(["scripts/Hub"], function (Hub) {
+            delete $.summernote.options.keyMap.pc.TAB;
+            delete $.summernote.options.keyMap.mac.TAB;
             Hub.init();
             VSS.notifyLoadSucceeded();            
         });

@@ -1,12 +1,15 @@
 import Service = require("VSS/Service");
 import { Constants, IBugBash } from "./Models";
+import Utils_String = require("VSS/Utils/String");
 
 export class BugBashManager {
     public static async readBugBashes(): Promise<IBugBash[]> {
         let dataService: IExtensionDataService = await VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData);
 
         try {            
-            let items = await dataService.getDocuments(Constants.STORAGE_KEY);
+            let items = await dataService.getDocuments(Constants.STORAGE_KEY);            
+            items = items.filter((item: IBugBash) => Utils_String.equals(VSS.getWebContext().project.id, item.projectId, true) && Utils_String.equals(VSS.getWebContext().team.id, item.teamId, true));
+
             for(let item of items) {
                 BugBashManager._translateDates(item);
             }
@@ -22,6 +25,10 @@ export class BugBashManager {
         try {
             let dataService: IExtensionDataService = await VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData);
             let item = await dataService.getDocument(Constants.STORAGE_KEY, bugBashId);
+            if (!Utils_String.equals(VSS.getWebContext().project.id, item.projectId, true) || !Utils_String.equals(VSS.getWebContext().team.id, item.teamId, true)) {
+                return null;
+            }
+
             BugBashManager._translateDates(item);
 
             return item;
@@ -33,6 +40,10 @@ export class BugBashManager {
 
     public static async writeBugBash(bugBashModel: IBugBash): Promise<IBugBash> {
         try {
+            if (!Utils_String.equals(VSS.getWebContext().project.id, bugBashModel.projectId, true) || !Utils_String.equals(VSS.getWebContext().team.id, bugBashModel.teamId, true)) {
+                return null;
+            }
+
             let dataService: IExtensionDataService = await VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData);
             let item = await dataService.setDocument(Constants.STORAGE_KEY, bugBashModel);
             BugBashManager._translateDates(item);
@@ -44,10 +55,14 @@ export class BugBashManager {
         }
     }
 
-    public static async deleteBugBash(bugBashId: string): Promise<boolean> {
+    public static async deleteBugBash(bugBashModel: IBugBash): Promise<boolean> {
         try {
+            if (!Utils_String.equals(VSS.getWebContext().project.id, bugBashModel.projectId, true) || !Utils_String.equals(VSS.getWebContext().team.id, bugBashModel.teamId, true)) {
+                return false;
+            }
+
             let dataService: IExtensionDataService = await VSS.getService<IExtensionDataService>(VSS.ServiceIds.ExtensionData);
-            await dataService.deleteDocument(Constants.STORAGE_KEY, bugBashId);
+            await dataService.deleteDocument(Constants.STORAGE_KEY, bugBashModel.id);
             return true;
         }
         catch (e) {

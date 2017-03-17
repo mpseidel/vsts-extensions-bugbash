@@ -35,7 +35,7 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
         }
         else {
             if (this.state.items.length == 0) {
-                return <MessagePanel message="No instance of bug bash created yet." messageType={MessageType.Info} />
+                return <MessagePanel message="No instance of bug bash exists in the context of current team." messageType={MessageType.Info} />
             }
             else {
                 return <List items={this.state.items} className="instance-list" onRenderCell={this._onRenderCell} />

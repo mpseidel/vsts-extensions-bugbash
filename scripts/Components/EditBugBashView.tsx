@@ -19,7 +19,7 @@ export class EditBugBashView extends HubView<IEditHubViewState> {
         }
         else {
             if (!this.state.item) {
-                return <MessagePanel message="This instance of bug bash doesnt exist." messageType={MessageType.Error} />
+                return <MessagePanel message="This instance of bug bash doesnt exist in the context of current team." messageType={MessageType.Error} />
             }
             else {
                 return <BugBashEditor id={this.state.item.id} context={this.props.context} />;

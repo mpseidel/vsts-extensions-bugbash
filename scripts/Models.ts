@@ -43,6 +43,8 @@ export interface IBugBash {
     startTime?: Date;
     endTime?: Date;
     reccurence: BugBashRecurrence;
+    projectId: string;
+    teamId: string;
 }
 
 export enum BugBashRecurrence {

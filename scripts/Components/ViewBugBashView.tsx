@@ -95,8 +95,8 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                         <CommandBar items={menuitems} farItems={workItemsMenuItems} />
                     </div>
                     
-                    {!this.state.item && <MessagePanel message="This instance of bug bash doesnt exist." messageType={MessageType.Error} />}
-                    {this.state.item && this.state.item.templateId && !this.state.template && <MessagePanel message="The template specified in this instance of bug bash doesnt exist." messageType={MessageType.Error} />}
+                    {!this.state.item && <MessagePanel message="This instance of bug bash doesnt exist in the context of current team." messageType={MessageType.Error} />}
+                    {this.state.item && this.state.item.templateId && !this.state.template && <MessagePanel message="The template specified in this instance of bug bash doesnt exist in the context of the current team." messageType={MessageType.Error} />}
                     {this.state.item && (!this.state.item.templateId || this.state.template) && (
                         <div className="contents">
                             <div className="results-view-contents">
@@ -436,9 +436,9 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
 
     @autobind
     private _setWorkItemFieldValue(fieldRefName: string, value: string) {
-        let newWorkItemFieldValue = {...this.state.newWorkItemFieldValues};
-        newWorkItemFieldValue[fieldRefName] = value;
-        this.setState({...this.state, newWorkItemFieldValue: newWorkItemFieldValue});
+        let newWorkItemFieldValues = {...this.state.newWorkItemFieldValues};
+        newWorkItemFieldValues[fieldRefName] = value;
+        this.setState({...this.state, newWorkItemFieldValues: newWorkItemFieldValues});
     }
 
     private async _refreshWorkItemResults() {

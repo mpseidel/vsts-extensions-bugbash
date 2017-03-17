@@ -13,7 +13,9 @@ export class BugBash {
             workItemTag: "",
             templateId: "",
             manualFields: [],
-            reccurence: BugBashRecurrence.None
+            reccurence: BugBashRecurrence.None,
+            projectId: VSS.getWebContext().project.id,
+            teamId: VSS.getWebContext().team.id
         });
     }
 

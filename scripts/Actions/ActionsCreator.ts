@@ -104,7 +104,7 @@ export class ActionsCreator {
     }  
 
     public async deleteBugBash(bugBash: IBugBash): Promise<boolean> {         
-        let deleted = await BugBashManager.deleteBugBash(bugBash.id);
+        let deleted = await BugBashManager.deleteBugBash(bugBash);
 
         if (deleted) {
             this._actionsHub.BugBashItemDeleted.invoke(bugBash);
