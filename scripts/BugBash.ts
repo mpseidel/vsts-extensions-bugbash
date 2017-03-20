@@ -27,7 +27,10 @@ export class BugBash {
 
     constructor(model: IBugBash) {
         this._model = {...model};
+        this._model.configTemplates = {...model.configTemplates};
+
         this._originalModel = {...model};
+        this._originalModel.configTemplates = {...model.configTemplates};
     }
 
     public getModel(): IBugBash {
@@ -109,6 +112,7 @@ export class BugBash {
     public updateWorkItemType(newType: string) {
         this._model.workItemType = newType;
         this._model.templateId = "";  // reset template
+        this._model.configTemplates = {};
         this.fireChanged();
     }
 

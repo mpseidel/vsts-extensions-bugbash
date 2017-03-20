@@ -10,8 +10,12 @@ import { NewWorkItemCreator } from "./NewWorkItemCreator";
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
 import { WorkItemTemplateReference, WorkItemTemplate, WorkItemField, WorkItemType, WorkItemQueryResult, Wiql, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
+import Utils_Date = require("VSS/Utils/Date");
+import Utils_String = require("VSS/Utils/String");
+import Utils_Array = require("VSS/Utils/Array");
 
 import { CommandBar } from "../OfficeFabric/CommandBar";
+import { SearchBox } from "../OfficeFabric/SearchBox";
 import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 import { autobind } from "../OfficeFabric/Utilities";
 
@@ -20,6 +24,9 @@ interface IViewHubViewState extends IHubViewState {
     resultsLoaded: boolean;
     resultsLoading: boolean;
     workItemResults: WorkItem[];
+    filterText: string;
+    sortColumn: string;
+    sortOrder: string;
 }
 
 export class ViewBugBashView extends HubView<IViewHubViewState> {
@@ -32,18 +39,42 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
             if (!this.state.item) {
                 return <MessagePanel message="This instance of bug bash doesnt exist in the context of current team." messageType={MessageType.Error} />;
             }
-            else if(this.state.item.templateId && !this.props.context.stores.workItemTemplateStore.getItem(this.state.item.templateId)) {
-                return <MessagePanel message="The template specified in this instance of bug bash doesnt exist in the context of the current team." messageType={MessageType.Error} />;
-            }
             else {
+                let createWorkItemComponent;
+                if(this.state.item.templateId && !this.props.context.stores.workItemTemplateStore.getItem(this.state.item.templateId)) {
+                    createWorkItemComponent = (
+                        <div className="add-workitem-contents">
+                            <MessagePanel message="The template specified in this instance of bug bash doesnt exist in the context of the current team." messageType={MessageType.Warning} />
+                        </div>
+                    );
+                }
+                else {
+                    createWorkItemComponent = <NewWorkItemCreator addWorkItem={this._addWorkItem} item={this.state.item} context={this.props.context} />
+                }
+
                 return (
                     <div className="results-view">
-                        <div className="results-view-menu">
-                            <CommandBar items={this._getMenuItems()} />
+                        <div className="results-view-menu">                            
+                            <SearchBox className="results-view-searchbox" 
+                                value={this.state.filterText || ""}
+                                onSearch={(searchText: string) => this._updateFilterText(searchText)} 
+                                onChange={(newText: string) => {
+                                    if (newText.trim() === "") {
+                                        this._updateFilterText("");
+                                    }
+                                }} />
+                            <CommandBar className="results-view-menu-toolbar" items={this._getMenuItems()} />
                         </div>
                         <div className="contents">
-                            <WorkItemsViewer areResultsReady={!this.state.resultsLoading && this.state.resultsLoaded} workItems={this.state.workItemResults} refreshWorkItems={this._refreshWorkItemsView} context={this.props.context} />
-                            <NewWorkItemCreator addWorkItem={this._addWorkItem} item={this.state.item} context={this.props.context} />
+                            <WorkItemsViewer 
+                                areResultsReady={!this.state.resultsLoading && this.state.resultsLoaded} 
+                                sortColumn={this.state.sortColumn} 
+                                sortOrder={this.state.sortOrder} 
+                                workItems={this._sortAndFilterWorkItems(this.state.workItemResults)} 
+                                refreshWorkItems={this._refreshWorkItemsView} 
+                                changeSort={this._changeSort}
+                                context={this.props.context} />
+                            {createWorkItemComponent}
                         </div>
                     </div>
                 );                
@@ -59,7 +90,8 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                 loadingState: LoadingState.Loaded,
                 resultsLoading: false,
                 resultsLoaded: false,
-                workItemResults: []
+                workItemResults: [],
+                filterText: ""
             });
         }
         else {
@@ -83,8 +115,56 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
             loadingState: LoadingState.Loading,
             resultsLoaded: false,
             resultsLoading: false,
-            workItemResults: []
+            workItemResults: [],
+            sortColumn: "System.CreatedDate",
+            sortOrder: "desc",
+            filterText: ""
         }
+    }
+
+    @autobind
+    private _sortAndFilterWorkItems(workItems: WorkItem[]): WorkItem[] {
+        let items = workItems.slice();
+        let sortedItems = items.sort((w1: WorkItem, w2: WorkItem) => {
+            if (Utils_String.equals(this.state.sortColumn, "ID", true)) {
+                return this.state.sortOrder === "desc" ? ((w1.id > w2.id) ? -1 : 1) : ((w1.id > w2.id) ? 1 : -1);
+            }
+            else if (Utils_String.equals(this.state.sortColumn, "System.CreatedDate", true)) {
+                let d1 = new Date(w1.fields["System.CreatedDate"]);
+                let d2 = new Date(w2.fields["System.CreatedDate"]);
+                return this.state.sortOrder === "desc" ? -1 * Utils_Date.defaultComparer(d1, d2) : Utils_Date.defaultComparer(d1, d2);
+            }
+            else {
+                let v1 = w1.fields[this.state.sortColumn];
+                let v2 = w2.fields[this.state.sortColumn];
+                return this.state.sortOrder === "desc" ? -1 * Utils_String.defaultComparer(v1, v2) : Utils_String.defaultComparer(v1, v2);
+            }
+        });
+
+        if (!this.state.filterText) {
+            return sortedItems;
+        }
+        else {
+            return sortedItems.filter((workItem: WorkItem) => {
+                const filterText = this.state.filterText;
+                return `${workItem.id}` === filterText
+                    || Utils_String.caseInsensitiveContains(workItem.fields["System.AssignedTo"] || "", filterText)
+                    || Utils_String.caseInsensitiveContains(workItem.fields["System.State"] || "", filterText)
+                    || Utils_String.caseInsensitiveContains(workItem.fields["System.CreatedBy"] || "", filterText)
+                    || Utils_String.caseInsensitiveContains(workItem.fields["System.Title"] || "", filterText)
+                    || Utils_String.caseInsensitiveContains(workItem.fields["System.AreaPath"] || "", filterText);
+            });
+        }
+    }
+
+    @autobind
+    private _updateFilterText(searchText: string): void {
+        this.setState(this._mergeState({filterText: searchText}));
+    }
+
+    @autobind
+    private _changeSort(sortColumn: string, sortOrder: string): void {
+         this.setState(this._mergeState({sortColumn: sortColumn, sortOrder: sortOrder}));
     }
 
     @autobind
@@ -143,7 +223,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
 
     @autobind
     private _addWorkItem(workItem: WorkItem) {
-        let workItems = this.state.workItemResults.concat(workItem);
+        let workItems = [workItem].concat(this.state.workItemResults);
         this.setState(this._mergeState({workItemResults: workItems}));
     }
 }

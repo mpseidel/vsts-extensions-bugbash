@@ -35,6 +35,9 @@ export interface IWorkItemsViewerProps extends IBaseProps {
     areResultsReady: boolean;
     workItems: WorkItem[];
     refreshWorkItems: (workItems: WorkItem[]) => void;
+    sortColumn: string;
+    sortOrder: string;
+    changeSort: (sortColumn: string, sortOrder: string) => void;
 }
 
 export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWorkItemsViewerState> {
@@ -47,7 +50,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         this.state = {
             workItemError: null,
             isContextMenuVisible: false,
-            contextMenuTarget: null
+            contextMenuTarget: null,
         };
     }
 
@@ -76,23 +79,24 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
             return (                
                 <div className="results-view-contents">
                     { this.state.workItemError && <MessagePanel message={this.state.workItemError} messageType={MessageType.Error} />}
-                    { this.props.workItems.length == 0 && (<MessagePanel message="No work items has been created yet in this bug bash." messageType={MessageType.Info} />) }
+                    { this.props.workItems.length == 0 && (<MessagePanel message="No work item results." messageType={MessageType.Info} />) }
                     { this.props.workItems.length > 0 && (
                         <DetailsList 
                             layoutMode={DetailsListLayoutMode.fixedColumns}
-                            constrainMode={ConstrainMode.horizontalConstrained}
+                            constrainMode={ConstrainMode.unconstrained}
                             selectionMode={SelectionMode.multiple}
                             isHeaderVisible={true}
                             checkboxVisibility={CheckboxVisibility.onHover}
                             columns={this._getColumns()}
                             onRenderItemColumn={this._onRenderCell}
-                            items={this.props.workItems} 
+                            items={this.props.workItems}
                             className="workitem-list"
                             onItemInvoked={(item: WorkItem, index: number) => {
                                 this._openWorkItemDialog(null, item);
                             }}
                             selection={ this._selection }
                             onItemContextMenu={this._showContextMenu}
+                            onColumnHeaderClick={this._onColumnHeaderClick}
                         />                                    
                     ) }
                     { this.state.isContextMenuVisible && (
@@ -117,7 +121,9 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 name:"ID",
                 minWidth: 70,
                 maxWidth: 70,
-                isResizable: false
+                isResizable: false,
+                isSorted: Utils_String.equals(this.props.sortColumn, "ID", true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             },
             {
                 fieldName: "System.Title",
@@ -125,7 +131,9 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 name:"Title",
                 minWidth: 250,
                 maxWidth: 250,
-                isResizable: false
+                isResizable: false,
+                isSorted: Utils_String.equals(this.props.sortColumn, "System.Title", true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             },
             {
                 fieldName: "System.CreatedBy",
@@ -133,14 +141,18 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 name:"Created By",
                 minWidth: 150,
                 maxWidth: 150,
-                isResizable: false
+                isResizable: false,
+                isSorted: Utils_String.equals(this.props.sortColumn, "System.CreatedBy", true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             },
             {
                 fieldName: "System.CreatedDate",
                 key: "CreatedDate",
                 name:"Created Date",
                 minWidth: 200,
-                isResizable: false
+                isResizable: false,
+                isSorted: Utils_String.equals(this.props.sortColumn, "System.CreatedDate", true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             },
             {
                 fieldName: "System.State",
@@ -148,7 +160,9 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 name:"State",
                 minWidth: 100,
                 maxWidth: 100,
-                isResizable: false
+                isResizable: false,
+                isSorted: Utils_String.equals(this.props.sortColumn, "System.State", true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             },
             {
                 fieldName: "System.AssignedTo",
@@ -156,7 +170,9 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 name:"Assigned To",
                 minWidth: 150,
                 maxWidth: 150,
-                isResizable: false
+                isResizable: false,
+                isSorted: Utils_String.equals(this.props.sortColumn, "System.AssignedTo", true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             },
             {
                 fieldName: "System.AreaPath",
@@ -164,9 +180,16 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 name:"Area Path",
                 minWidth: 250,
                 maxWidth: 250,
-                isResizable: false
+                isResizable: false,
+                isSorted: Utils_String.equals(this.props.sortColumn, "System.AreaPath", true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             }
         ];
+    }    
+
+    @autobind
+    private _onColumnHeaderClick(ev?: React.MouseEvent<HTMLElement>, column?: IColumn) {
+        this.props.changeSort(column.fieldName, column.isSortedDescending ? "asc" : "desc");
     }
 
     @autobind

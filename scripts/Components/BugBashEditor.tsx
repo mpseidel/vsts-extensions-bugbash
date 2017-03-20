@@ -262,7 +262,7 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
     }
 
     @autobind
-    private _getTemplateDropdownOptions(selectedValue: string) {
+    private _getTemplateDropdownOptions(selectedValue: string): IDropdownOption[] {
         let emptyTemplateItem = [
             {   
                 key: "", index: 0, text: "<No template>", 

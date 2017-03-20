@@ -9,6 +9,7 @@
     bottom: 0;
     overflow: auto;    
     margin: 17px 20px;
+    margin-bottom: 0;
 
     .all-view {
         position: absolute;
@@ -220,9 +221,39 @@
 }
 
 .results-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
+    .results-view-menu {
+        display: flex;
+        flex-direction: row;
+
+        .results-view-menu-toolbar {
+            flex: 1;
+        }
+
+        .results-view-searchbox {
+            margin-bottom: 1px;
+            margin-top: 1px;
+        }
+    }
+
     .contents {
         display: flex;
         flex-direction: row;
+        flex: 1;
+
+        .results-view-contents {
+            margin-top: 20px;
+            width: 75%;
+            border-right: 1px solid #ccc;
+            overflow: auto;
+
+            .workitem-list {
+                overflow: auto;
+            }
+        }        
     }
 
     .add-workitem-contents {
@@ -239,11 +270,5 @@
         .manual-field-row {
             margin-bottom: 10px;
         }
-    }
-
-    .results-view-contents {
-        margin-top: 20px;
-        width: 75%;
-        border-right: 1px solid #ccc;
-    }
+    }    
 }
