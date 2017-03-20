@@ -13,7 +13,6 @@ import { autobind } from "../OfficeFabric/Utilities";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import { WorkItemTemplateReference, WorkItemField, WorkItemType } from "TFS/WorkItemTracking/Contracts";
-import * as WitClient from "TFS/WorkItemTracking/RestClient";
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 
@@ -33,6 +32,7 @@ export interface IBugBashEditorState {
     templates: WorkItemTemplateReference[];
     fields: WorkItemField[];    
     workItemTypes: WorkItemType[];
+    error?: string;
 }
 
 export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBashEditorState> {
@@ -53,7 +53,8 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
             fields: [],
             workItemTypes: [],
             templates: [],
-            loadingState: LoadingState.Loading
+            loadingState: LoadingState.Loading,
+            error: null
         };
     }
 
@@ -112,8 +113,12 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                         navigationService.updateHistoryEntry(UrlActions.ACTION_EDIT, { id: savedBugBash.id }, true);
                     }
                     else if (!this._item.isNew() && this._item.isDirty() && this._item.isValid()) {
-                        this.props.context.actionsCreator.updateBugBash(model);
+                        let result = await this.props.context.actionsCreator.updateBugBash(model);
                         this._item.renew();
+
+                        if (!result) {
+                            this.setState({...this.state, error: "The bug bash version does not match with the latest version. Please refresh the page and try again."})
+                        }
                     }
                 }
             },
@@ -205,6 +210,7 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                 </div>
                 <div className="editor-view-contents">
                     <div className="first-section">
+                        { this.state.error && (<MessagePanel message={this.state.error} messageType={MessageType.Error} /> )}
                         <TextField label='Title' required={true} value={model.title} onChanged={(newValue: string) => this._item.updateTitle(newValue)} onGetErrorMessage={this._getTitleError} />
                         <Label>Description</Label>
                         <div>

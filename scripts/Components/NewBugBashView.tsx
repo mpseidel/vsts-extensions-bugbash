@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import { LoadingState } from "../Models";
-import { HubView, IHubViewState, IHubViewProps } from "./HubView";
+import { HubView, IHubViewState } from "./HubView";
 import { Loading } from "./Loading";
 import { BugBashEditor } from "./BugBashEditor";
 

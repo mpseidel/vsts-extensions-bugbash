@@ -1,28 +1,14 @@
 import * as React from "react";
-import { DetailsList } from "../OfficeFabric/DetailsList";
-import { DetailsListLayoutMode, IColumn, CheckboxVisibility, ConstrainMode } from "../OfficeFabric/components/DetailsList/DetailsList.Props";
-import { SelectionMode } from "../OfficeFabric/utilities/selection/interfaces";
-import { Selection } from "../OfficeFabric/utilities/selection/Selection";
 import { autobind } from "../OfficeFabric/Utilities";
 import { Label } from "../OfficeFabric/Label";
-import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 import { TextField } from "../OfficeFabric/TextField";
 import { Button, ButtonType } from "../OfficeFabric/Button";
-import { ContextualMenu } from "../OfficeFabric/ContextualMenu";
-import { parseUniquefiedIdentityName } from "../Helpers";
 
-import { HostNavigationService } from "VSS/SDK/Services/Navigation";
-import { WorkItemTemplateReference, WorkItemTemplate, WorkItemField, WorkItemType, WorkItemQueryResult, Wiql, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
+import { WorkItemTemplate, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
-import * as WitBatchClient from "TFS/WorkItemTracking/BatchRestClient";
-import { WorkItemFormNavigationService } from "TFS/WorkItemTracking/Services";
-import Utils_Date = require("VSS/Utils/Date");
-import Utils_String = require("VSS/Utils/String");
-import Utils_Array = require("VSS/Utils/Array");
 import {JsonPatchDocument, JsonPatchOperation, Operation} from "VSS/WebApi/Contracts";
 
-import { UrlActions, IBaseProps, IBugBash, LoadingState } from "../Models";
-import { Loading } from "./Loading";
+import { IBaseProps, IBugBash } from "../Models";
 import { MessagePanel, MessageType } from "./MessagePanel";
 
 export interface INewWorkItemCreatorProps extends IBaseProps {

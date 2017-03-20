@@ -1,15 +1,16 @@
 import * as React from "react";
 
 import { IBugBash, LoadingState, UrlActions } from "../Models";
-import { HubView, IHubViewState, IHubViewProps } from "./HubView";
+import { HubView, IHubViewState } from "./HubView";
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { WorkItemsViewer } from "./WorkItemsViewer";
 import { NewWorkItemCreator } from "./NewWorkItemCreator";
+import { WorkItemDiscussion } from "./WorkItemDiscussion";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
-import { WorkItemTemplateReference, WorkItemTemplate, WorkItemField, WorkItemType, WorkItemQueryResult, Wiql, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
+import { Wiql, WorkItem } from "TFS/WorkItemTracking/Contracts";
 import Utils_Date = require("VSS/Utils/Date");
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
@@ -27,6 +28,8 @@ interface IViewHubViewState extends IHubViewState {
     filterText: string;
     sortColumn: string;
     sortOrder: string;
+    showDiscussions?: boolean;
+    discussionWorkItem?: WorkItem;
 }
 
 export class ViewBugBashView extends HubView<IViewHubViewState> {
@@ -40,16 +43,16 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                 return <MessagePanel message="This instance of bug bash doesnt exist in the context of current team." messageType={MessageType.Error} />;
             }
             else {
-                let createWorkItemComponent;
-                if(this.state.item.templateId && !this.props.context.stores.workItemTemplateStore.getItem(this.state.item.templateId)) {
-                    createWorkItemComponent = (
-                        <div className="add-workitem-contents">
-                            <MessagePanel message="The template specified in this instance of bug bash doesnt exist in the context of the current team." messageType={MessageType.Warning} />
-                        </div>
-                    );
+                let rightSideComponent;
+
+                if (this.state.showDiscussions && this.state.discussionWorkItem) {
+                    rightSideComponent = <WorkItemDiscussion workItem={this.state.discussionWorkItem} onClose={this._hideDiscussions} context={this.props.context} />;
+                }
+                else if(this.state.item.templateId && !this.props.context.stores.workItemTemplateStore.getItem(this.state.item.templateId)) {
+                    rightSideComponent = <MessagePanel message="The template specified in this instance of bug bash doesnt exist in the context of the current team." messageType={MessageType.Warning} />;
                 }
                 else {
-                    createWorkItemComponent = <NewWorkItemCreator addWorkItem={this._addWorkItem} item={this.state.item} context={this.props.context} />
+                    rightSideComponent = <NewWorkItemCreator addWorkItem={this._addWorkItem} item={this.state.item} context={this.props.context} />;
                 }
 
                 return (
@@ -70,11 +73,16 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                                 areResultsReady={!this.state.resultsLoading && this.state.resultsLoaded} 
                                 sortColumn={this.state.sortColumn} 
                                 sortOrder={this.state.sortOrder} 
+                                configTemplates={this.state.item.configTemplates || {}}
                                 workItems={this._sortAndFilterWorkItems(this.state.workItemResults)} 
                                 refreshWorkItems={this._refreshWorkItemsView} 
                                 changeSort={this._changeSort}
+                                onShowDiscussions={this._showDiscussions}
                                 context={this.props.context} />
-                            {createWorkItemComponent}
+                            
+                            <div className="right-side-content">
+                                {rightSideComponent}
+                            </div>
                         </div>
                     </div>
                 );                
@@ -158,6 +166,16 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
     }
 
     @autobind
+    private _showDiscussions(workItem: WorkItem): void {
+        this.setState(this._mergeState({showDiscussions: true, discussionWorkItem: workItem}));
+    }
+
+    @autobind
+    private _hideDiscussions(): void {
+        this.setState(this._mergeState({showDiscussions: false, discussionWorkItem: null}));
+    }
+
+    @autobind
     private _updateFilterText(searchText: string): void {
         this.setState(this._mergeState({filterText: searchText}));
     }
@@ -187,7 +205,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
     }
 
     private async _refreshWorkItemResults() {
-        this.setState(this._mergeState({resultsLoading: true, resultsLoaded: false, workItemResults: [], filterText: ""}));
+        this.setState(this._mergeState({resultsLoading: true, resultsLoaded: false, workItemResults: [], filterText: "", showDiscussions: false, discussionWorkItem: null}));
 
         let queryResult = await WitClient.getClient().queryByWiql(this._getWiql(), VSS.getWebContext().project.id);
         let workItemIds = queryResult.workItems.map(workItem => workItem.id);
@@ -200,7 +218,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
             workItems = [];
         }
 
-        this.setState(this._mergeState({resultsLoading: false, resultsLoaded: true, workItemResults: workItems, filterText: ""}));
+        this.setState(this._mergeState({resultsLoading: false, resultsLoaded: true, workItemResults: workItems, filterText: "", showDiscussions: false, discussionWorkItem: null}));
     }
 
     private _mergeState(newState: any) {
