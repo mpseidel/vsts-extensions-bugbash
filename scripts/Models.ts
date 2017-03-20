@@ -35,6 +35,7 @@ export module Constants {
 export interface IBugBash {
     id: string,
     title: string;
+    workItemType: string;
     readonly __etag: number;
     workItemTag: string;
     templateId: string;
@@ -45,6 +46,7 @@ export interface IBugBash {
     reccurence: BugBashRecurrence;
     projectId: string;
     teamId: string;
+    configTemplates: IDictionaryStringTo<string>;
 }
 
 export enum BugBashRecurrence {

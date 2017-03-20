@@ -1,26 +1,26 @@
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 import { Store } from "VSS/Flux/Store";
-import { WorkItemTemplateReference } from "TFS/WorkItemTracking/Contracts";
+import { WorkItemField } from "TFS/WorkItemTracking/Contracts";
 
 import { ActionsHub } from "../Actions/ActionsCreator";
 
-export interface IWorkItemTemplateStore {
+export interface IWorkItemFieldStore {
     isLoaded(): boolean;
-    itemExists(id: string): boolean;
-    getItem(id: string): WorkItemTemplateReference;
-    getAll(): WorkItemTemplateReference[];
+    itemExists(refName: string): boolean;
+    getItem(refName: string): WorkItemField;
+    getAll(): WorkItemField[];
 }
 
-export class WorkItemTemplateStore extends Store implements IWorkItemTemplateStore {
-    private _items: WorkItemTemplateReference[];
+export class WorkItemFieldStore extends Store implements IWorkItemFieldStore {
+    private _items: WorkItemField[];
 
     constructor(actions: ActionsHub) {
         super();
 
         this._items = null;
 
-        actions.InitializeWorkItemTemplates.addListener((items: WorkItemTemplateReference[]) => {
+        actions.InitializeWorkItemFields.addListener((items: WorkItemField[]) => {
             if (!items) {
                 this.emitChanged();
             }
@@ -33,26 +33,26 @@ export class WorkItemTemplateStore extends Store implements IWorkItemTemplateSto
     }
 
     public itemExists(id: string): boolean {
-        return this._getById(id) ? true : false;
+        return this._getByRefName(id) ? true : false;
     }
 
-    public getItem(id: string): WorkItemTemplateReference {
-        return this._getById(id);
+    public getItem(refName: string): WorkItemField {
+        return this._getByRefName(refName);
     }
 
-    public getAll(): WorkItemTemplateReference[] {
+    public getAll(): WorkItemField[] {
         return this._items || [];
     }
 
-    private _getById(id: string): WorkItemTemplateReference {
+    private _getByRefName(refName: string): WorkItemField {
         if (!this.isLoaded()) {
             return null;
         }
 
-        return Utils_Array.first(this._items, (item: WorkItemTemplateReference) => Utils_String.equals(item.id, id, true));
+        return Utils_Array.first(this._items, (item: WorkItemField) => Utils_String.equals(item.referenceName, refName, true));
     }
 
-    private _onAdd(items: WorkItemTemplateReference | WorkItemTemplateReference[]): void {
+    private _onAdd(items: WorkItemField | WorkItemField[]): void {
         if (!items) {
             return;
         }
@@ -73,8 +73,8 @@ export class WorkItemTemplateStore extends Store implements IWorkItemTemplateSto
         this.emitChanged();
     }
 
-    private _addItem(item: WorkItemTemplateReference): void {
-        let existingItemIndex = Utils_Array.findIndex(this._items, (existingItem: WorkItemTemplateReference) => Utils_String.equals(item.id, existingItem.id, true));
+    private _addItem(item: WorkItemField): void {
+        let existingItemIndex = Utils_Array.findIndex(this._items, (existingItem: WorkItemField) => Utils_String.equals(item.referenceName, existingItem.referenceName, true));
         if (existingItemIndex != -1) {
             // Overwrite the item data
             this._items[existingItemIndex] = item;

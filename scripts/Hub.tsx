@@ -41,7 +41,7 @@ export class Hub extends React.Component<IHubProps, IHubState> {
 
         const actionsHub = new ActionsHub();
         const storeHub = new StoresHub(actionsHub);
-        const actionsCreator = new ActionsCreator(actionsHub, storeHub.bugBashItemStore, storeHub.workItemFieldItemStore, storeHub.workItemTemplateStore);
+        const actionsCreator = new ActionsCreator(actionsHub, storeHub.bugBashItemStore, storeHub.workItemFieldStore, storeHub.workItemTemplateStore, storeHub.workItemTypeStore);
 
         this._context = {
             actions: actionsHub,

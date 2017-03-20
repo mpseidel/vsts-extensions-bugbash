@@ -15,7 +15,9 @@ export class BugBash {
             manualFields: [],
             reccurence: BugBashRecurrence.None,
             projectId: VSS.getWebContext().project.id,
-            teamId: VSS.getWebContext().team.id
+            teamId: VSS.getWebContext().team.id,
+            workItemType: "",
+            configTemplates: {}
         });
     }
 
@@ -48,13 +50,32 @@ export class BugBash {
 
     public isDirty(): boolean {        
         return !Utils_String.equals(this._model.title, this._originalModel.title)
+            || !Utils_String.equals(this._model.workItemType, this._originalModel.workItemType, true)
             || !Utils_String.equals(this._model.description, this._originalModel.description)
-            || !Utils_String.equals(this._model.workItemTag, this._originalModel.workItemTag)
+            || !Utils_String.equals(this._model.workItemTag, this._originalModel.workItemTag, true)
             || !Utils_Date.equals(this._model.startTime, this._originalModel.startTime)
             || !Utils_Date.equals(this._model.endTime, this._originalModel.endTime)
             || this._model.reccurence !== this._originalModel.reccurence
-            || !Utils_String.equals(this._model.templateId, this._originalModel.templateId)
+            || !Utils_String.equals(this._model.templateId, this._originalModel.templateId, true)
             || !Utils_Array.arrayEquals(this._model.manualFields, this._originalModel.manualFields, (item1: string, item2: string) => Utils_String.equals(item1, item2, true))
+            || this._hasConfigTemplateChanged();
+    }
+
+    private _hasConfigTemplateChanged(): boolean {
+        let keys1 = Object.keys(this._model.configTemplates);
+        let keys2 = Object.keys(this._originalModel.configTemplates);
+
+        if (keys1.length !== keys2.length) {
+            return true;
+        }
+
+        for (let key of keys1) {
+            if (!Utils_String.equals(this._model.configTemplates[key], this._originalModel.configTemplates[key], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public isValid(): boolean {
@@ -62,7 +83,8 @@ export class BugBash {
             && this._model.title.length <= 128
             && this._model.workItemTag.trim().length > 0
             && this._model.workItemTag.length <= 128
-            && this._model.manualFields.length > 0;
+            && this._model.manualFields.length > 0
+            && this._model.workItemType.trim().length > 0;
     }
 
     public attachChanged(handler: () => void) {
@@ -81,6 +103,17 @@ export class BugBash {
 
     public updateTitle(newTitle: string) {
         this._model.title = newTitle;
+        this.fireChanged();
+    }
+
+    public updateWorkItemType(newType: string) {
+        this._model.workItemType = newType;
+        this._model.templateId = "";  // reset template
+        this.fireChanged();
+    }
+
+    public updateConfigTemplate(configName: string, templateId: string) {
+        this._model.configTemplates[configName] = templateId;
         this.fireChanged();
     }
 

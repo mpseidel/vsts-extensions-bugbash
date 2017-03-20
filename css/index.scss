@@ -53,6 +53,15 @@
     }
 }
 
+.title-cell {
+    cursor: pointer;
+
+    &:hover {     
+        color: #106ebe;               
+        text-decoration: underline;                    
+    }
+}
+
 /*
 ** Message Panel
 */
@@ -79,6 +88,16 @@
 
     &.message-success {
         background-color: #dff6dd;
+    }
+}
+
+.callout-container {
+    max-height: 200px;
+}
+
+.context-menu {
+    button[disabled], button[disabled]:hover, button[disabled]:focus {
+        border: initial !important;
     }
 }
 
@@ -114,6 +133,11 @@
                 flex: 1;
                 margin-left: 20px;
             }
+
+            .fourth-section {
+                flex: 1;
+                margin-left: 20px;
+            }
         }        
 
         .field-picker {
@@ -124,7 +148,7 @@
             }
         }
 
-        .manual-fields-error {
+        .manual-fields-error, .workitemtype-error {
             font-size: 12px;
             font-weight: 400;
             color: #a80000;

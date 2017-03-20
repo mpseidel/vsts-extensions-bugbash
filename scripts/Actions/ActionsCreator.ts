@@ -1,10 +1,10 @@
 import { Action } from "VSS/Flux/Action";
-import { WorkItemField } from "TFS/WorkItemTracking/Contracts";
-import { WorkItemTemplateReference } from "TFS/WorkItemTracking/Contracts";
+import { WorkItemField, WorkItemTemplateReference, WorkItemType } from "TFS/WorkItemTracking/Contracts";
 
 import { IBugBash } from "../Models";
 import { IBugBashItemStore } from "../Stores/BugbashItemStore";
-import { IWorkItemFieldStore } from "../Stores/WorkItemFieldItemStore";
+import { IWorkItemFieldStore } from "../Stores/WorkItemFieldStore";
+import { IWorkItemTypeStore } from "../Stores/WorkItemTypeStore";
 import { IWorkItemTemplateStore } from "../Stores/WorkItemTemplateStore";
 import { BugBashManager } from "../BugbashManager";
 
@@ -15,20 +15,19 @@ export class ActionsHub {
     public BugBashItemDeleted = new Action<IBugBash>();
     public BugBashItemAdded = new Action<IBugBash>();
     public BugBashItemUpdated = new Action<IBugBash>();
-
-    public InitializeFieldItems = new Action<WorkItemField[]>();
-
-    public InitializeWorkItemTemplateItems = new Action<WorkItemTemplateReference[]>();
-    public TemplateItemAdded = new Action<WorkItemTemplateReference>();
+    
+    public InitializeWorkItemFields = new Action<WorkItemField[]>();
+    public InitializeWorkItemTemplates = new Action<WorkItemTemplateReference[]>();
+    public InitializeWorkItemTypes = new Action<WorkItemType[]>();
 }
 
 export class ActionsCreator {
     constructor(
         private _actionsHub: ActionsHub, 
         private _bugBashItemDataProvider: IBugBashItemStore, 
-        private _workItemFieldItemDataProvider: IWorkItemFieldStore,
-        private _workItemTemplateItemDataProvider: IWorkItemTemplateStore) {
-        
+        private _workItemFieldDataProvider: IWorkItemFieldStore,
+        private _workItemTemplateDataProvider: IWorkItemTemplateStore,
+        private _workItemTypeDataProvider: IWorkItemTypeStore) {
     }  
 
     public async initializeAllBugBashes() {
@@ -43,46 +42,38 @@ export class ActionsCreator {
     }
 
     public async initializeWorkItemFields() {
-        if (this._workItemFieldItemDataProvider.isLoaded()) {
+        if (this._workItemFieldDataProvider.isLoaded()) {
             // Do nothing if query hierarchy data is already loaded
-            this._actionsHub.InitializeFieldItems.invoke(null);
+            this._actionsHub.InitializeWorkItemFields.invoke(null);
         }
         else {            
             let fields = await WitClient.getClient().getFields(VSS.getWebContext().project.id);
-            this._actionsHub.InitializeFieldItems.invoke(fields);
+            this._actionsHub.InitializeWorkItemFields.invoke(fields);
         }
     }
 
     public async initializeWorkItemTemplates() {
-        if (this._workItemTemplateItemDataProvider.isLoaded()) {
+        if (this._workItemTemplateDataProvider.isLoaded()) {
             // Do nothing if query hierarchy data is already loaded
-            this._actionsHub.InitializeWorkItemTemplateItems.invoke(null);
+            this._actionsHub.InitializeWorkItemTemplates.invoke(null);
         }
         else {            
-            let templates = await WitClient.getClient().getTemplates(VSS.getWebContext().project.id, VSS.getWebContext().team.id, "Bug");
-            this._actionsHub.InitializeWorkItemTemplateItems.invoke(templates);
+            let templates = await WitClient.getClient().getTemplates(VSS.getWebContext().project.id, VSS.getWebContext().team.id);
+            this._actionsHub.InitializeWorkItemTemplates.invoke(templates);
         }
     }
 
-    public async ensureWorkItemTemplate(id: string): Promise<boolean> {
-        if (!this._workItemTemplateItemDataProvider.itemExists(id)) {
-            try {
-                let template = await WitClient.getClient().getTemplate(VSS.getWebContext().project.id, VSS.getWebContext().team.id, id);
-                if (template) {
-                    this._actionsHub.TemplateItemAdded.invoke(template);
-                    return true;
-                }
-            }
-            catch (e) {
-                return false;
-            }
-            return false;
+    public async initializeWorkItemTypes() {
+        if (this._workItemTypeDataProvider.isLoaded()) {
+            // Do nothing if query hierarchy data is already loaded
+            this._actionsHub.InitializeWorkItemTypes.invoke(null);
         }
-        else {
-            return true;
+        else {            
+            let workItemTypes = await WitClient.getClient().getWorkItemTypes(VSS.getWebContext().project.id);
+            this._actionsHub.InitializeWorkItemTypes.invoke(workItemTypes);
         }
-    }  
-
+    }
+    
     public async ensureBugBash(id: string): Promise<boolean> {
         if (!this._bugBashItemDataProvider.itemExists(id)) {
             try {

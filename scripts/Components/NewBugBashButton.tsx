@@ -15,7 +15,7 @@ export class NewBugBashButton extends React.Component<INewBugBashButtonProps, vo
     }
 
     public render(): JSX.Element {
-        return <Button className="create-new-button" buttonType={ButtonType.primary} onClick={this._onNewClick}>New BugBash</Button>
+        return <Button className="create-new-button" buttonType={ButtonType.primary} onClick={this._onNewClick}>New instance</Button>
     }
 
     private async _onNewClick() {

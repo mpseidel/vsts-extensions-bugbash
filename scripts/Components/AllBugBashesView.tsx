@@ -6,7 +6,7 @@ import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import Utils_Date = require("VSS/Utils/Date");
 
 import { UrlActions, IBugBash, LoadingState, BugBashRecurrence } from "../Models";
-import { HubView, IHubViewState, IHubViewProps } from "./HubView";
+import { HubView, IHubViewState } from "./HubView";
 import { Loading } from "./Loading";
 
 import { NewBugBashButton } from "./NewBugBashButton";

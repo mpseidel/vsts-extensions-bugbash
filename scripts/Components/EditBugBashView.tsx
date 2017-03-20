@@ -1,12 +1,10 @@
 import * as React from "react";
 
-import { HostNavigationService } from "VSS/SDK/Services/Navigation";
-
-import { UrlActions, IBugBash, LoadingState } from "../Models";
-import { HubView, IHubViewState, IHubViewProps } from "./HubView";
+import { IBugBash, LoadingState } from "../Models";
+import { HubView, IHubViewState } from "./HubView";
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
-import { BugBashEditor, IBugBashEditorProps } from "./BugBashEditor";
+import { BugBashEditor } from "./BugBashEditor";
 
 interface IEditHubViewState extends IHubViewState {
     item: IBugBash;

@@ -6,17 +6,16 @@ import { Label } from "../OfficeFabric/Label";
 import { Dropdown } from "../OfficeFabric/components/Dropdown/Dropdown";
 import { ChoiceGroup } from "../OfficeFabric/components/ChoiceGroup/ChoiceGroup";
 import { IChoiceGroupOption } from "../OfficeFabric/components/ChoiceGroup/ChoiceGroup.Props";
-import { IDropdownOption } from "../OfficeFabric/components/Dropdown/Dropdown.Props";
+import { IDropdownOption, IDropdownProps } from "../OfficeFabric/components/Dropdown/Dropdown.Props";
 import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 import { TagPicker, ITag } from '../OfficeFabric/components/pickers/TagPicker/TagPicker';
 import { autobind } from "../OfficeFabric/Utilities";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
-import { WorkItemTemplateReference, WorkItemField } from "TFS/WorkItemTracking/Contracts";
+import { WorkItemTemplateReference, WorkItemField, WorkItemType } from "TFS/WorkItemTracking/Contracts";
+import * as WitClient from "TFS/WorkItemTracking/RestClient";
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
-import { RichEditor } from "VSS/Controls/RichEditor";
-import { BaseControl } from "VSS/Controls";
 
 import { IBugBash, IBaseProps, LoadingState, UrlActions, BugBashRecurrence } from "../Models";
 import { BugBash } from "../BugBash";
@@ -29,16 +28,16 @@ export interface IBugBashEditorProps extends IBaseProps {
 }
 
 export interface IBugBashEditorState {
-    templates: WorkItemTemplateReference[];
-    fields: WorkItemField[];
     loadingState: LoadingState;
     model: IBugBash;
+    templates: WorkItemTemplateReference[];
+    fields: WorkItemField[];    
+    workItemTypes: WorkItemType[];
 }
 
 export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBashEditorState> {
     private _item: BugBash;
-    private _richEditor: RichEditor;
-
+    
     constructor(props: IBugBashEditorProps, context: any) {
         super(props, context);
 
@@ -47,41 +46,53 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
         }
         else {
             this._item = BugBash.getNew();
-        }        
+        } 
+
+        this.state = {
+            model: this._item.getModel(),
+            fields: [],
+            workItemTypes: [],
+            templates: [],
+            loadingState: LoadingState.Loading
+        };
     }
 
-    public componentDidMount() {
-        this.props.context.stores.workItemFieldItemStore.addChangedListener(this._onStoreChanged);
+    public componentDidMount() {   
+        this.props.context.stores.workItemTypeStore.addChangedListener(this._onStoreChanged);
+        this.props.context.stores.workItemFieldStore.addChangedListener(this._onStoreChanged);
         this.props.context.stores.workItemTemplateStore.addChangedListener(this._onStoreChanged);
         this._item.attachChanged(() => {
             this._onStoreChanged();
-        });
+        });  
 
-        this.initialize();        
+        this._initialize();      
     }
 
     public componentWillUnmount() {
-        this.props.context.stores.workItemFieldItemStore.removeChangedListener(this._onStoreChanged);
-        this.props.context.stores.workItemTemplateStore.removeChangedListener(this._onStoreChanged);
+        this.props.context.stores.workItemTypeStore.removeChangedListener(this._onStoreChanged);
+        this.props.context.stores.workItemFieldStore.removeChangedListener(this._onStoreChanged);
+        this.props.context.stores.workItemTemplateStore.removeChangedListener(this._onStoreChanged);    
         this._item.detachChanged();
     }
 
-    protected initialize(): void {
+    private _initialize(): void {
         this.props.context.actionsCreator.initializeWorkItemFields();
         this.props.context.actionsCreator.initializeWorkItemTemplates();
+        this.props.context.actionsCreator.initializeWorkItemTypes();
     }
 
     private _onStoreChanged = (handler?: IEventHandler): void => {
-        let newState = this.getStateFromStore();
+        let newState = this._getStateFromStore();
         this.setState(newState);
-    }
+    }    
 
-    protected getStateFromStore(): IBugBashEditorState {
+    private _getStateFromStore(): IBugBashEditorState {
         return {
-            fields: this.props.context.stores.workItemFieldItemStore.getAll(),
+            fields: this.props.context.stores.workItemFieldStore.getAll(),
             templates: this.props.context.stores.workItemTemplateStore.getAll(),
+            workItemTypes: this.props.context.stores.workItemTypeStore.getAll(),
             model: this._item.getModel(),
-            loadingState: this.props.context.stores.workItemFieldItemStore.isLoaded() && this.props.context.stores.workItemTemplateStore.isLoaded() ? LoadingState.Loaded : LoadingState.Loading
+            loadingState: this.props.context.stores.workItemTypeStore.isLoaded() && this.props.context.stores.workItemFieldStore.isLoaded() && this.props.context.stores.workItemTemplateStore.isLoaded() ? LoadingState.Loaded : LoadingState.Loading
         };
     }
 
@@ -160,22 +171,16 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                     }
                 }
             },
-        ];
+        ];        
 
-        let emptyTemplateItem = [
-            {   
-                key: "", index: 0, text: "<No template>", 
-                selected: !model.templateId
-            }
-        ];
-        let templateItems: IDropdownOption[] = emptyTemplateItem.concat(this.state.templates.map((template: WorkItemTemplateReference, index: number) => {
+        let witItems: IDropdownOption[] = this.state.workItemTypes.map((workItemType: WorkItemType, index: number) => {
             return {
-                key: template.id,
+                key: workItemType.name,
                 index: index + 1,
-                text: template.name,
-                selected: model.templateId ? Utils_String.equals(model.templateId, template.id, true) : false
+                text: workItemType.name,
+                selected: model.workItemType ? Utils_String.equals(model.workItemType, workItemType.name, true) : false
             }
-        }));
+        });
 
         let tagPickerClassName = "field-picker";
         if (model.manualFields.length == 0) {
@@ -217,8 +222,11 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                             />
                         </div>
                         <div className="third-section">
+                            <Dropdown label="Work item type" onRenderList={this._onRenderCallout} required={true} options={witItems} onChanged={(option: IDropdownOption) => this._item.updateWorkItemType(option.key as string)} />
+                            { !model.workItemType && (<div className="workitemtype-error">A work item type is required.</div>) }
+
                             <TextField label='Work item tag' required={true} value={model.workItemTag} onChanged={(newValue: string) => this._item.updateWorkItemTag(newValue)} onGetErrorMessage={this._getTagError} />
-                            <Dropdown label="Work item template" options={templateItems} onChanged={(option: IDropdownOption) => this._item.updateTemplate(option.key as string)} />
+                            <Dropdown label="Work item template" onRenderList={this._onRenderCallout} options={this._getTemplateDropdownOptions(model.templateId)} onChanged={(option: IDropdownOption) => this._item.updateTemplate(option.key as string)} />
                             <Label required={true}>Manually entered fields</Label>
                             <TagPicker className={tagPickerClassName}
                                 defaultSelectedItems={model.manualFields.map(f => this._getFieldTag(f))}
@@ -234,10 +242,42 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                             />
                             { model.manualFields.length == 0 && (<div className="manual-fields-error">Atleast one field must be manually entered.</div>) }
                         </div>
+                        <div className="fourth-section">
+                            <Dropdown label="Accept Work item template" onRenderList={this._onRenderCallout} options={this._getTemplateDropdownOptions(model.configTemplates["Accept"])} onChanged={(option: IDropdownOption) => this._item.updateConfigTemplate("Accept", option.key as string)} />
+                            <Dropdown label="Reject Work item template" onRenderList={this._onRenderCallout} options={this._getTemplateDropdownOptions(model.configTemplates["Reject"])} onChanged={(option: IDropdownOption) => this._item.updateConfigTemplate("Reject", option.key as string)} />
+                        </div>
                     </div>
                 </div>
             </div>
         );
+    }
+
+    @autobind
+    private _onRenderCallout(props?: IDropdownProps, defaultRender?: (props?: IDropdownProps) => JSX.Element): JSX.Element {
+        return (
+            <div className="callout-container">
+                {defaultRender(props)}
+            </div>
+        );
+    }
+
+    @autobind
+    private _getTemplateDropdownOptions(selectedValue: string) {
+        let emptyTemplateItem = [
+            {   
+                key: "", index: 0, text: "<No template>", 
+                selected: !selectedValue
+            }
+        ];
+        let filteredTemplates = this.state.templates.filter((t: WorkItemTemplateReference) => Utils_String.equals(t.workItemTypeName, this.state.model.workItemType));
+        return emptyTemplateItem.concat(filteredTemplates.map((template: WorkItemTemplateReference, index: number) => {
+            return {
+                key: template.id,
+                index: index + 1,
+                text: template.name,
+                selected: selectedValue ? Utils_String.equals(selectedValue, template.id, true) : false
+            }
+        }));
     }
 
     @autobind
