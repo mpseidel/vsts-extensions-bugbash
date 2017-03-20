@@ -222,7 +222,7 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                             />
                         </div>
                         <div className="third-section">
-                            <Dropdown label="Work item type" onRenderList={this._onRenderCallout} required={true} options={witItems} onChanged={(option: IDropdownOption) => this._item.updateWorkItemType(option.key as string)} />
+                            <Dropdown label="Work item type" disabled={!this._item.isNew()} onRenderList={this._onRenderCallout} required={true} options={witItems} onChanged={(option: IDropdownOption) => this._item.updateWorkItemType(option.key as string)} />
                             { !model.workItemType && (<div className="workitemtype-error">A work item type is required.</div>) }
 
                             <TextField label='Work item tag' required={true} value={model.workItemTag} onChanged={(newValue: string) => this._item.updateWorkItemTag(newValue)} onGetErrorMessage={this._getTagError} />

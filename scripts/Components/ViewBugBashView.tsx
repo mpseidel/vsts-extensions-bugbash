@@ -187,7 +187,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
     }
 
     private async _refreshWorkItemResults() {
-        this.setState(this._mergeState({resultsLoading: true, resultsLoaded: false, workItemResults: []}));
+        this.setState(this._mergeState({resultsLoading: true, resultsLoaded: false, workItemResults: [], filterText: ""}));
 
         let queryResult = await WitClient.getClient().queryByWiql(this._getWiql(), VSS.getWebContext().project.id);
         let workItemIds = queryResult.workItems.map(workItem => workItem.id);
@@ -200,7 +200,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
             workItems = [];
         }
 
-        this.setState(this._mergeState({resultsLoading: false, resultsLoaded: true, workItemResults: workItems}));
+        this.setState(this._mergeState({resultsLoading: false, resultsLoaded: true, workItemResults: workItems, filterText: ""}));
     }
 
     private _mergeState(newState: any) {
