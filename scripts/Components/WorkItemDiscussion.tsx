@@ -114,12 +114,10 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
             return (
                 <div className="work-item-comment" key={`${index}`}>
                     <div className="updated-by">
-                        <IdentityView identity={comment.revisedBy} />
-                        <span>{Utils_Date.friendly(new Date(comment.revisedDate as any))}</span>
+                        <IdentityView identityDistinctName={comment.revisedBy.name} />
+                        <div className="update-date">{Utils_Date.friendly(new Date(comment.revisedDate as any))}</div>
                     </div>
-                    <div className="message">
-                        {comment.text}
-                    </div>
+                    <div className="message" dangerouslySetInnerHTML={{ __html: comment.text }} />                        
                 </div>
             );
         });

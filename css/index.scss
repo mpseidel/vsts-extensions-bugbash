@@ -289,7 +289,33 @@
             }
 
             .workitem-comments {
-                padding-top: 40px;
+                padding-top: 30px;
+
+                .work-item-comment {
+                    margin-bottom: 15px;
+                    border-bottom: 1px solid #eee;
+
+                    .updated-by {
+                        display: flex;
+
+                        .identity-cell {
+                            flex: 1;
+                            margin-right: 10px;
+                            color: #666666;
+                            font-weight: bold;
+                        }
+
+                        .update-date {
+                            font-size: 85%;
+                            font-style: italic;
+                            color: #666666;
+                        }
+                    }
+
+                    .message {
+                        margin-top: 5px;
+                    }
+                }
             }
         }
     }    
