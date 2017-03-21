@@ -1,5 +1,10 @@
-import {  IBugBash } from "./Models";
+import { Constants } from "./Models";
+
 import Utils_String = require("VSS/Utils/String");
+import Utils_Array = require("VSS/Utils/Array");
+import {JsonPatchDocument, JsonPatchOperation, Operation} from "VSS/WebApi/Contracts";
+import * as WitClient from "TFS/WorkItemTracking/RestClient";
+import { WorkItem } from "TFS/WorkItemTracking/Contracts";
 
 /**
  * Parse a distinct display name string into an entity reference object
@@ -77,4 +82,48 @@ export function getVsIdFromGroupUniqueName(str: string): string {
     }
 
     return vsid;
+}
+
+export async function saveWorkItem(id: number, workItemType: string, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
+    let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
+    for (let fieldRefName in fieldValues) {
+        patchDocument.push({
+            op: Operation.Add,
+            path: `/fields/${fieldRefName}`,
+            value: fieldValues[fieldRefName]
+        } as JsonPatchOperation);
+    }
+
+    if (id <= 0) {
+        return await WitClient.getClient().createWorkItem(patchDocument, VSS.getWebContext().project.id, workItemType);
+    }
+    else {
+        return await WitClient.getClient().updateWorkItem(patchDocument, id);
+    }
+}
+
+export function isWorkItemAccepted(workItem: WorkItem): boolean {
+    let tags: string = workItem.fields["System.Tags"] || "";
+    let tagArr = tags.split(";");
+
+    if (Utils_Array.findIndex(tagArr, (t: string) => Utils_String.equals(t.trim(), Constants.BUGBASH_ACCEPT_TAG, true)) !== -1) {
+        return true;
+    }
+
+    return false;
+}
+
+export function isWorkItemRejected(workItem: WorkItem): boolean {
+    let tags: string = workItem.fields["System.Tags"] || "";
+    let tagArr = tags.split(";");
+
+    if (Utils_Array.findIndex(tagArr, (t: string) => Utils_String.equals(t.trim(), Constants.BUGBASH_REJECT_TAG, true)) !== -1) {
+        return true;
+    }
+
+    return false;
+}
+
+export function getBugBashTag(bugbashId: string): string {
+    return `BugBash_${bugbashId}`;
 }

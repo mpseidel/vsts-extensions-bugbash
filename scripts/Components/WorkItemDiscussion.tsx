@@ -1,18 +1,19 @@
 import * as React from "react";
 import { autobind } from "../OfficeFabric/Utilities";
 import { TextField } from "../OfficeFabric/TextField";
+import { Label } from "../OfficeFabric/Label";
 import { CommandBar } from "../OfficeFabric/CommandBar";
 import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 
 import { WorkItem, CommentSortOrder, WorkItemComment } from "TFS/WorkItemTracking/Contracts";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
-import {JsonPatchDocument, JsonPatchOperation, Operation} from "VSS/WebApi/Contracts";
 import Utils_Date = require("VSS/Utils/Date");
 
 import { LoadingState, IBaseProps } from "../Models";
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { IdentityView } from "./IdentityView";
+import { saveWorkItem } from "../Helpers";
 
 export interface IWorkItemDiscussionProps extends IBaseProps {
     workItem: WorkItem;
@@ -45,6 +46,7 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
             return (
                 <div className="workitem-discussion-container">                    
                     { this.state.error && (<MessagePanel message={this.state.error} messageType={MessageType.Error} /> )}
+                    <Label className="workitem-discussion-header">{`Discussion for work item: ${this.props.workItem.id}`}</Label>
                     <CommandBar className="discussions-view-toolbar" items={this._getMenuItems()} />
                     <TextField inputClassName="comment-textarea" multiline={true} label='Add a comment' className="add-comment-area" value={this.state.newComment || ""} onChanged={this._commentChanged} onKeyUp={this._onEnter} />
 
@@ -114,15 +116,8 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
             let commentText = this.state.newComment;
             this.setState({...this.state, newComment: "", error: ""});
 
-            let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
-            patchDocument.push({
-                op: Operation.Add,
-                path: "/fields/System.History",
-                value: commentText
-            } as JsonPatchOperation);                    
-
             try {
-                let workItem = await WitClient.getClient().updateWorkItem(patchDocument, this.props.workItem.id);
+                let workItem = await saveWorkItem(this.props.workItem.id, "", {"System.History": commentText});
                 let newComment: WorkItemComment = {
                     text: commentText,
                     revisedBy: {id: VSS.getWebContext().user.id, name: `${VSS.getWebContext().user.name} <${VSS.getWebContext().user.uniqueName}>`, url: ""},

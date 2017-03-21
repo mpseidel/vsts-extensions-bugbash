@@ -28,8 +28,14 @@ export module UrlActions {
 
 export module Constants {
     export var STORAGE_KEY = "bugbashes";
-    export var ACTION_VIEW = "view";
-    export var ACTION_EDIT = "edit";
+    export var BUGBASH_ACCEPT_TAG = "BugBashItemAccepted";
+    export var BUGBASH_REJECT_TAG = "BugBashItemRejected";
+    export var ACCEPT_STATUS_CELL_NAME = "BugBashItemAcceptStatus";
+    export var ACCEPTED_TEXT = "Accepted";
+    export var REJECTED_TEXT = "Rejected";
+    export var ACTIONS_CELL_NAME = "Actions";
+    export var ACCEPT_CONFIG_TEMPLATE_KEY = "Accept";
+    export var REJECT_CONFIG_TEMPLATE_KEY = "Reject";
 }
 
 export interface IBugBash {
@@ -37,7 +43,6 @@ export interface IBugBash {
     title: string;
     workItemType: string;
     readonly __etag: number;
-    workItemTag: string;
     templateId: string;
     manualFields: string[];
     description?: string;    

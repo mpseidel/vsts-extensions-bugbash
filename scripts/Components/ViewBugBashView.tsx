@@ -1,12 +1,13 @@
 import * as React from "react";
 
-import { IBugBash, LoadingState, UrlActions } from "../Models";
+import { IBugBash, LoadingState, UrlActions, Constants } from "../Models";
 import { HubView, IHubViewState } from "./HubView";
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { WorkItemsViewer } from "./WorkItemsViewer";
 import { NewWorkItemCreator } from "./NewWorkItemCreator";
 import { WorkItemDiscussion } from "./WorkItemDiscussion";
+import { isWorkItemAccepted, isWorkItemRejected, getBugBashTag } from "../Helpers";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
@@ -73,11 +74,12 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                                 areResultsReady={!this.state.resultsLoading && this.state.resultsLoaded} 
                                 sortColumn={this.state.sortColumn} 
                                 sortOrder={this.state.sortOrder} 
-                                configTemplates={this.state.item.configTemplates || {}}
+                                bugBashItem={this.state.item}
                                 workItems={this._sortAndFilterWorkItems(this.state.workItemResults)} 
                                 refreshWorkItems={this._refreshWorkItemsView} 
                                 changeSort={this._changeSort}
                                 onShowDiscussions={this._showDiscussions}
+                                updateWorkItem={this._addOrEditWorkItemInView}
                                 context={this.props.context} />
                             
                             <div className="right-side-content">
@@ -142,6 +144,11 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                 let d2 = new Date(w2.fields["System.CreatedDate"]);
                 return this.state.sortOrder === "desc" ? -1 * Utils_Date.defaultComparer(d1, d2) : Utils_Date.defaultComparer(d1, d2);
             }
+            else if (Utils_String.equals(this.state.sortColumn, Constants.ACCEPT_STATUS_CELL_NAME, true)) {
+                let v1 = isWorkItemAccepted(w1) ? Constants.ACCEPTED_TEXT : (isWorkItemRejected(w1) ? Constants.REJECTED_TEXT : "");
+                let v2 = isWorkItemAccepted(w2) ? Constants.ACCEPTED_TEXT : (isWorkItemRejected(w2) ? Constants.REJECTED_TEXT : "");
+                return this.state.sortOrder === "desc" ? -1 * Utils_String.ignoreCaseComparer(v1, v2) : Utils_String.ignoreCaseComparer(v1, v2);
+            }
             else {
                 let v1 = w1.fields[this.state.sortColumn];
                 let v2 = w2.fields[this.state.sortColumn];
@@ -154,13 +161,15 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
         }
         else {
             return sortedItems.filter((workItem: WorkItem) => {
+                let status = isWorkItemAccepted(workItem) ? Constants.ACCEPTED_TEXT : (isWorkItemRejected(workItem) ? Constants.REJECTED_TEXT : "");
                 const filterText = this.state.filterText;
                 return `${workItem.id}` === filterText
                     || Utils_String.caseInsensitiveContains(workItem.fields["System.AssignedTo"] || "", filterText)
                     || Utils_String.caseInsensitiveContains(workItem.fields["System.State"] || "", filterText)
                     || Utils_String.caseInsensitiveContains(workItem.fields["System.CreatedBy"] || "", filterText)
                     || Utils_String.caseInsensitiveContains(workItem.fields["System.Title"] || "", filterText)
-                    || Utils_String.caseInsensitiveContains(workItem.fields["System.AreaPath"] || "", filterText);
+                    || Utils_String.caseInsensitiveContains(workItem.fields["System.AreaPath"] || "", filterText)
+                    || Utils_String.caseInsensitiveContains(status, filterText);
             });
         }
     }
@@ -230,13 +239,27 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
         const item = this.props.context.stores.bugBashItemStore.getItem(this.props.id);
 
         return {
-            query: `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.WorkItemType] = '${item.workItemType}' AND [System.Tags] CONTAINS '${item.workItemTag}' ORDER BY [System.CreatedDate] DESC`
+            query: `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.WorkItemType] = '${item.workItemType}' AND [System.Tags] CONTAINS '${getBugBashTag(item.id)}' ORDER BY [System.CreatedDate] DESC`
         };
     }
 
     @autobind
     private _refreshWorkItemsView(workItems: WorkItem[]) {
         this.setState(this._mergeState({workItemResults: workItems}));
+    }
+
+    @autobind
+    private _addOrEditWorkItemInView(workItem: WorkItem) {
+        let newWorkItemResults: WorkItem[] = this.state.workItemResults.slice();
+
+        let index = Utils_Array.findIndex(newWorkItemResults, (w: WorkItem) => w.id === workItem.id);
+        if (index == -1) {
+            newWorkItemResults.push(workItem);
+        }
+        else {
+            newWorkItemResults[index] = workItem;
+        }
+        this.setState(this._mergeState({workItemResults: newWorkItemResults}));
     }
 
     @autobind

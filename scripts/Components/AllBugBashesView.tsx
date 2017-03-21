@@ -61,7 +61,6 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
                 <div className="instance-title" onClick={() => this._onRowClick(item)}>{ item.title }</div>
                 <div className="instance-info">
                     <div className="instance-info-cell-container"><div className="instance-info-cell">Recurrence:</div><div className="instance-info-cell-info">{BugBashRecurrence[item.reccurence]}</div></div>
-                    <div className="instance-info-cell-container"><div className="instance-info-cell">Work item tag:</div><div className="instance-info-cell-info">{item.workItemTag}</div></div>
                     { item.startTime && (<div className="instance-info-cell-container"><div className="instance-info-cell">Start:</div><div className="instance-info-cell-info">{Utils_Date.format(item.startTime, "dddd, MMMM dd, yyyy")}</div></div>) }
                     { item.endTime && (<div className="instance-info-cell-container"><div className="instance-info-cell">End:</div><div className="instance-info-cell-info">{Utils_Date.format(item.endTime, "dddd, MMMM dd, yyyy")}</div></div>) }
                 </div>

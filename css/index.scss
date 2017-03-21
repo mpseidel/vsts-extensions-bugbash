@@ -11,6 +11,10 @@
     margin: 17px 20px;
     margin-bottom: 0;
 
+    .fabric-container {
+        height: 100%;
+    }
+
     .all-view {
         position: absolute;
         top: 0;
@@ -253,12 +257,26 @@
             .workitem-list {
                 overflow: auto;
 
+                .workitem-accepted {
+                    color: green;
+                }
+
+                .workitem-rejected {
+                    color: red;
+                }
+
                 .workitem-row-actions-cell {
-                    .accept-button:hover {
+                    .workitem-row-cell-button {
+                        height: auto;
+                        padding: 4px;
+                        margin-right: 2px;
+                    }
+
+                    .accept-button, .accept-button:hover, .accept-button:focus {
                         color: #0078d7;
                     }
 
-                    .reject-button:hover {
+                    .reject-button, .reject-button:hover, .reject-button:focus {
                         color: #da0a00;
                     }
                 }
@@ -287,6 +305,12 @@
             display: flex;
             flex-direction: column;
             height: 100%;            
+
+            .workitem-discussion-header {
+                font-size: 15px;
+                font-weight: 700;
+                margin-bottom: 10px;
+            }
 
             .discussions-view-toolbar{
                 margin-bottom: 10px;

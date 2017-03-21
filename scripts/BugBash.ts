@@ -10,7 +10,6 @@ export class BugBash {
             id: "",
             title: "",
             __etag: 0,
-            workItemTag: "",
             templateId: "",
             manualFields: [],
             reccurence: BugBashRecurrence.None,
@@ -55,7 +54,6 @@ export class BugBash {
         return !Utils_String.equals(this._model.title, this._originalModel.title)
             || !Utils_String.equals(this._model.workItemType, this._originalModel.workItemType, true)
             || !Utils_String.equals(this._model.description, this._originalModel.description)
-            || !Utils_String.equals(this._model.workItemTag, this._originalModel.workItemTag, true)
             || !Utils_Date.equals(this._model.startTime, this._originalModel.startTime)
             || !Utils_Date.equals(this._model.endTime, this._originalModel.endTime)
             || this._model.reccurence !== this._originalModel.reccurence
@@ -84,8 +82,6 @@ export class BugBash {
     public isValid(): boolean {
         return this._model.title.trim().length > 0
             && this._model.title.length <= 128
-            && this._model.workItemTag.trim().length > 0
-            && this._model.workItemTag.length <= 128
             && this._model.manualFields.length > 0
             && this._model.workItemType.trim().length > 0;
     }
@@ -133,11 +129,6 @@ export class BugBash {
 
     public updateEndTime(newEndTime: Date) {
         this._model.endTime = newEndTime;
-        this.fireChanged();
-    }
-
-    public updateWorkItemTag(newTag: string) {
-        this._model.workItemTag = newTag;
         this.fireChanged();
     }
 

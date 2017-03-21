@@ -5,11 +5,10 @@ import { TextField } from "../OfficeFabric/TextField";
 import { Button, ButtonType } from "../OfficeFabric/Button";
 
 import { WorkItemTemplate, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
-import * as WitClient from "TFS/WorkItemTracking/RestClient";
-import {JsonPatchDocument, JsonPatchOperation, Operation} from "VSS/WebApi/Contracts";
 
 import { IBaseProps, IBugBash } from "../Models";
 import { MessagePanel, MessageType } from "./MessagePanel";
+import { saveWorkItem, getBugBashTag } from "../Helpers";
 
 export interface INewWorkItemCreatorProps extends IBaseProps {
     item: IBugBash;
@@ -17,8 +16,7 @@ export interface INewWorkItemCreatorProps extends IBaseProps {
 }
 
 export interface INewWorkItemCreatorState {
-    template: WorkItemTemplate;
-    newWorkItemFieldValues: {};
+    newWorkItemFieldValues: IDictionaryStringTo<string>;
     workItemError?: string
 }
 
@@ -28,7 +26,6 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
         
         this.state ={
             newWorkItemFieldValues: {},
-            template: null,
             workItemError: ""
         };
     }
@@ -46,7 +43,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
 
     @autobind
     private async _onSaveClick() {
-        let newWorkItemFieldValues = this.state.newWorkItemFieldValues || {};
+        let newWorkItemFieldValues = {...this.state.newWorkItemFieldValues} || {};
 
         if (!this._canSaveWorkItem()) {
             return;
@@ -55,39 +52,29 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
         // load template
         let template: WorkItemTemplate = null;
 
-        if (this.props.item.templateId) {            
-            if (!this.state.template) {
-                template = await WitClient.getClient().getTemplate(VSS.getWebContext().project.id, VSS.getWebContext().team.id, this.props.item.templateId);            
-            }
-            else {
-                template = this.state.template;
-            }
+        if (this.props.item.templateId) {     
+            let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.item.templateId);
 
-            newWorkItemFieldValues = { ...template.fields, ...newWorkItemFieldValues };
-        }        
+            if (templateFound) {
+                template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.item.templateId);
+                newWorkItemFieldValues = { ...template.fields, ...newWorkItemFieldValues };
+            }            
+        } 
 
-        // save work item
-        let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
-        for (let fieldRefName in newWorkItemFieldValues) {
-            patchDocument.push({
-                op: Operation.Add,
-                path: `/fields/${fieldRefName}`,
-                value: newWorkItemFieldValues[fieldRefName]
-            } as JsonPatchOperation);
+        if (newWorkItemFieldValues["System.Tags"]) {
+            newWorkItemFieldValues["System.Tags"] = `${getBugBashTag(this.props.item.id)};${newWorkItemFieldValues["System.Tags"]}`;
         }
-        patchDocument.push({
-            op: Operation.Add,
-            path: `/fields/System.Tags`,
-            value: this.props.item.workItemTag
-        } as JsonPatchOperation);
+        else {
+            newWorkItemFieldValues["System.Tags"] = getBugBashTag(this.props.item.id);
+        }
 
         try {
-            let workItem = await WitClient.getClient().createWorkItem(patchDocument, VSS.getWebContext().project.id, this.props.item.workItemType);            
-            this.setState({...this.state, workItemError: null, template: template, newWorkItemFieldValues: {}});
+            let workItem = await saveWorkItem(0, this.props.item.workItemType, newWorkItemFieldValues);
+            this.setState({...this.state, workItemError: null, newWorkItemFieldValues: {}});
             this.props.addWorkItem(workItem);
         }
         catch (e) {
-            this.setState({...this.state, workItemError: e.message, template: template});
+            this.setState({...this.state, workItemError: e.message});
         }
     }
 
@@ -95,7 +82,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
     private _canSaveWorkItem(): boolean {
         let newWorkItemFieldValues = this.state.newWorkItemFieldValues || {};
         for (let manualField of this.props.item.manualFields) {
-            if (!newWorkItemFieldValues[manualField] || newWorkItemFieldValues[manualField].trim() !== "") {
+            if (!newWorkItemFieldValues[manualField] || newWorkItemFieldValues[manualField].trim() === "") {
                 return false;
             }
         }

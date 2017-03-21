@@ -12,18 +12,17 @@ import { ContextualMenu } from "../OfficeFabric/ContextualMenu";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import { WorkItemTemplateReference, WorkItemTemplate, WorkItemField, WorkItemType, WorkItemQueryResult, Wiql, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
-import * as WitClient from "TFS/WorkItemTracking/RestClient";
 import * as WitBatchClient from "TFS/WorkItemTracking/BatchRestClient";
 import { WorkItemFormNavigationService } from "TFS/WorkItemTracking/Services";
 import Utils_Date = require("VSS/Utils/Date");
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
-import {JsonPatchDocument, JsonPatchOperation, Operation} from "VSS/WebApi/Contracts";
 
-import { UrlActions, IBaseProps, IBugBash, LoadingState } from "../Models";
+import { UrlActions, IBaseProps, IBugBash, LoadingState, Constants } from "../Models";
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { IdentityView } from "./IdentityView";
+import { saveWorkItem, isWorkItemAccepted, isWorkItemRejected, getBugBashTag } from "../Helpers";
 
 interface IWorkItemsViewerState {
     workItemError?: string;
@@ -33,13 +32,14 @@ interface IWorkItemsViewerState {
 
 export interface IWorkItemsViewerProps extends IBaseProps {
     areResultsReady: boolean;
-    workItems: WorkItem[];
-    refreshWorkItems: (workItems: WorkItem[]) => void;
+    workItems: WorkItem[];    
     sortColumn: string;
-    sortOrder: string;
+    sortOrder: string;    
+    bugBashItem: IBugBash;
+    refreshWorkItems: (workItems: WorkItem[]) => void;
     changeSort: (sortColumn: string, sortOrder: string) => void;
-    configTemplates: IDictionaryStringTo<string>;
     onShowDiscussions: (workItem: WorkItem) => void;
+    updateWorkItem: (workItem: WorkItem) => void;
 }
 
 export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWorkItemsViewerState> {
@@ -52,7 +52,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         this.state = {
             workItemError: null,
             isContextMenuVisible: false,
-            contextMenuTarget: null,
+            contextMenuTarget: null    
         };
     }
 
@@ -117,6 +117,16 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
 
     private _getColumns(): IColumn[] {
         return [
+            {
+                fieldName: Constants.ACCEPT_STATUS_CELL_NAME,
+                key: "Status",
+                name:"Status",
+                minWidth: 40,
+                maxWidth: 70,
+                isResizable: true,
+                isSorted: Utils_String.equals(this.props.sortColumn, Constants.ACCEPT_STATUS_CELL_NAME, true),
+                isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
+            },
             {
                 fieldName: "ID",
                 key: "ID",
@@ -188,8 +198,8 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 isSortedDescending: Utils_String.equals(this.props.sortOrder, "desc", true)
             },
             {
-                fieldName: "Actions",
-                key: "Actions",
+                fieldName: Constants.ACTIONS_CELL_NAME,
+                key: Constants.ACTIONS_CELL_NAME,
                 name: "",
                 minWidth: 120,
                 maxWidth: 120,
@@ -202,7 +212,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
 
     @autobind
     private _onColumnHeaderClick(ev?: React.MouseEvent<HTMLElement>, column?: IColumn) {
-        if (column.fieldName !== "Actions") {
+        if (column.fieldName !== Constants.ACTIONS_CELL_NAME) {
             this.props.changeSort(column.fieldName, column.isSortedDescending ? "asc" : "desc");
         }
     }
@@ -211,6 +221,18 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
     private _onRenderCell(item: WorkItem, index?: number, column?: IColumn): React.ReactNode {
         let text: string;
         switch (column.fieldName) {
+            case Constants.ACCEPT_STATUS_CELL_NAME:
+                let classNames = "overflow-ellipsis";
+                let statusText = "";
+                if (isWorkItemAccepted(item)) {
+                    classNames += " workitem-accepted";
+                    statusText = Constants.ACCEPTED_TEXT;
+                }
+                else if(isWorkItemRejected(item)) {
+                    classNames += " workitem-rejected";
+                    statusText = Constants.REJECTED_TEXT;
+                }
+                return <span className={classNames}>{statusText}</span>;
             case "ID":
                 text = `${item.id}`;
                 break;
@@ -222,12 +244,12 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
             case "System.CreatedBy":
             case "System.AssignedTo":
                 return <IdentityView identityDistinctName={item.fields[column.fieldName]} />;
-            case "Actions":
+            case Constants.ACTIONS_CELL_NAME:                
                 return (
                     <div className="workitem-row-actions-cell">
-                        <IconButton icon="Chat" title="Show discussions" onClick={() => this.props.onShowDiscussions(item)} />
-                        {this.props.configTemplates["Accept"] && <IconButton className="accept-button" icon="SkypeCircleCheck" title="Accept workitem" />}
-                        {this.props.configTemplates["Reject"] && <IconButton className="reject-button" icon="StatusErrorFull" title="Reject workitem" />}
+                        <IconButton icon="Chat" className="workitem-row-cell-button" title="Show discussions" onClick={() => this.props.onShowDiscussions(item)} />
+                        {!isWorkItemAccepted(item) && <IconButton className="accept-button workitem-row-cell-button" icon="SkypeCircleCheck" title="Accept workitem" onClick={() => this._acceptWorkItem(item)} />}
+                        {!isWorkItemRejected(item) && <IconButton className="reject-button workitem-row-cell-button" icon="StatusErrorFull" title="Reject workitem" onClick={() => this._rejectWorkItem(item)} />}
                     </div>
                 );
             default:
@@ -236,7 +258,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         }
 
         return <div className="overflow-ellipsis" title={text}>{text}</div>;
-    }
+    }    
 
     @autobind
     private _showContextMenu(item?: WorkItem, index?: number, e?: MouseEvent) {
@@ -251,6 +273,72 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
     @autobind
     private _hideContextMenu(e?: any) {
         this.setState({...this.state, contextMenuTarget: null, isContextMenuVisible: false});
+    }
+
+    private async _acceptWorkItem(item: WorkItem) {
+        let fieldValues: IDictionaryStringTo<string> = {};        
+
+        if (this.props.bugBashItem.configTemplates && this.props.bugBashItem.configTemplates[Constants.ACCEPT_CONFIG_TEMPLATE_KEY]) {
+            let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.bugBashItem.configTemplates[Constants.ACCEPT_CONFIG_TEMPLATE_KEY]);
+
+            if (templateFound) {
+                let template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.bugBashItem.configTemplates[Constants.ACCEPT_CONFIG_TEMPLATE_KEY]);
+                fieldValues = { ...template.fields };
+            }
+        }
+
+        // add Accept tag, bug bash tag and remove reject tag
+        let tags: string = fieldValues["System.Tags"] || "";
+        let tagArr = tags.split(";");
+        tagArr.push(Constants.BUGBASH_ACCEPT_TAG, getBugBashTag(this.props.bugBashItem.id));
+        let rejectedTagIndex = tagArr.indexOf(Constants.BUGBASH_REJECT_TAG);
+        if (rejectedTagIndex !== -1) {
+            tagArr.splice(rejectedTagIndex, 1);
+        }
+        
+        fieldValues["System.Tags"] = tagArr.join(";");
+
+        try {
+            let workItem = await saveWorkItem(item.id, "", fieldValues);
+            this.setState({...this.state, workItemError: null});
+            this.props.updateWorkItem(workItem);
+        }
+        catch (e) {
+            this.setState({...this.state, workItemError: e.message});
+        }
+    }
+
+    private async _rejectWorkItem(item: WorkItem) {
+        let fieldValues: IDictionaryStringTo<string> = {};        
+
+        if (this.props.bugBashItem.configTemplates && this.props.bugBashItem.configTemplates[Constants.REJECT_CONFIG_TEMPLATE_KEY]) {
+            let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.bugBashItem.configTemplates[Constants.REJECT_CONFIG_TEMPLATE_KEY]);
+
+            if (templateFound) {
+                let template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.bugBashItem.configTemplates[Constants.REJECT_CONFIG_TEMPLATE_KEY]);
+                fieldValues = { ...template.fields };
+            }
+        }
+
+        // add reject tag, bug bash tag and remove accept tag
+        let tags: string = fieldValues["System.Tags"] || "";
+        let tagArr = tags.split(";");
+        tagArr.push(Constants.BUGBASH_REJECT_TAG, getBugBashTag(this.props.bugBashItem.id));
+        let acceptedTagIndex = tagArr.indexOf(Constants.BUGBASH_ACCEPT_TAG);
+        if (acceptedTagIndex !== -1) {
+            tagArr.splice(acceptedTagIndex, 1);
+        }
+        
+        fieldValues["System.Tags"] = tagArr.join(";");
+
+        try {
+            let workItem = await saveWorkItem(item.id, "", fieldValues);
+            this.setState({...this.state, workItemError: null});
+            this.props.updateWorkItem(workItem);
+        }
+        catch (e) {
+            this.setState({...this.state, workItemError: e.message});
+        }
     }
 
     @autobind

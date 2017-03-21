@@ -16,7 +16,7 @@ import { WorkItemTemplateReference, WorkItemField, WorkItemType } from "TFS/Work
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 
-import { IBugBash, IBaseProps, LoadingState, UrlActions, BugBashRecurrence } from "../Models";
+import { IBugBash, IBaseProps, LoadingState, UrlActions, BugBashRecurrence, Constants } from "../Models";
 import { BugBash } from "../BugBash";
 import { Loading } from "./Loading";
 
@@ -231,7 +231,6 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                             <Dropdown label="Work item type" disabled={!this._item.isNew()} onRenderList={this._onRenderCallout} required={true} options={witItems} onChanged={(option: IDropdownOption) => this._item.updateWorkItemType(option.key as string)} />
                             { !model.workItemType && (<div className="workitemtype-error">A work item type is required.</div>) }
 
-                            <TextField label='Work item tag' required={true} value={model.workItemTag} onChanged={(newValue: string) => this._item.updateWorkItemTag(newValue)} onGetErrorMessage={this._getTagError} />
                             <Dropdown label="Work item template" onRenderList={this._onRenderCallout} options={this._getTemplateDropdownOptions(model.templateId)} onChanged={(option: IDropdownOption) => this._item.updateTemplate(option.key as string)} />
                             <Label required={true}>Manually entered fields</Label>
                             <TagPicker className={tagPickerClassName}
@@ -249,8 +248,13 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                             { model.manualFields.length == 0 && (<div className="manual-fields-error">Atleast one field must be manually entered.</div>) }
                         </div>
                         <div className="fourth-section">
-                            <Dropdown label="Accept Work item template" onRenderList={this._onRenderCallout} options={this._getTemplateDropdownOptions(model.configTemplates["Accept"])} onChanged={(option: IDropdownOption) => this._item.updateConfigTemplate("Accept", option.key as string)} />
-                            <Dropdown label="Reject Work item template" onRenderList={this._onRenderCallout} options={this._getTemplateDropdownOptions(model.configTemplates["Reject"])} onChanged={(option: IDropdownOption) => this._item.updateConfigTemplate("Reject", option.key as string)} />
+                            <Dropdown label="Accept Work item template" onRenderList={this._onRenderCallout} 
+                                options={this._getTemplateDropdownOptions(model.configTemplates[Constants.ACCEPT_CONFIG_TEMPLATE_KEY])} 
+                                onChanged={(option: IDropdownOption) => this._item.updateConfigTemplate(Constants.ACCEPT_CONFIG_TEMPLATE_KEY, option.key as string)} />
+
+                            <Dropdown label="Reject Work item template" onRenderList={this._onRenderCallout} 
+                                options={this._getTemplateDropdownOptions(model.configTemplates[Constants.REJECT_CONFIG_TEMPLATE_KEY])} 
+                                onChanged={(option: IDropdownOption) => this._item.updateConfigTemplate(Constants.REJECT_CONFIG_TEMPLATE_KEY, option.key as string)} />
                         </div>
                     </div>
                 </div>

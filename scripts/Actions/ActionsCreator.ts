@@ -1,11 +1,12 @@
 import { Action } from "VSS/Flux/Action";
-import { WorkItemField, WorkItemTemplateReference, WorkItemType } from "TFS/WorkItemTracking/Contracts";
+import { WorkItemField, WorkItemTemplateReference, WorkItemType, WorkItemTemplate } from "TFS/WorkItemTracking/Contracts";
 
 import { IBugBash } from "../Models";
 import { IBugBashItemStore } from "../Stores/BugbashItemStore";
 import { IWorkItemFieldStore } from "../Stores/WorkItemFieldStore";
 import { IWorkItemTypeStore } from "../Stores/WorkItemTypeStore";
 import { IWorkItemTemplateStore } from "../Stores/WorkItemTemplateStore";
+import { IWorkItemTemplateItemStore } from "../Stores/WorkItemTemplateItemStore";
 import { BugBashManager } from "../BugbashManager";
 
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
@@ -19,6 +20,8 @@ export class ActionsHub {
     public InitializeWorkItemFields = new Action<WorkItemField[]>();
     public InitializeWorkItemTemplates = new Action<WorkItemTemplateReference[]>();
     public InitializeWorkItemTypes = new Action<WorkItemType[]>();
+
+    public WorkItemTemplateItemAdded = new Action<WorkItemTemplate | WorkItemTemplate[]>();
 }
 
 export class ActionsCreator {
@@ -27,7 +30,8 @@ export class ActionsCreator {
         private _bugBashItemDataProvider: IBugBashItemStore, 
         private _workItemFieldDataProvider: IWorkItemFieldStore,
         private _workItemTemplateDataProvider: IWorkItemTemplateStore,
-        private _workItemTypeDataProvider: IWorkItemTypeStore) {
+        private _workItemTypeDataProvider: IWorkItemTypeStore,
+        private _workItemTemplateItemDataProvider: IWorkItemTemplateItemStore) {
     }  
 
     public async initializeAllBugBashes() {
@@ -93,6 +97,26 @@ export class ActionsCreator {
             return true;
         }
     }  
+
+    public async ensureTemplateItem(id: string): Promise<boolean> {
+        if (!this._workItemTemplateItemDataProvider.itemExists(id)) {
+            try {
+                let template = await WitClient.getClient().getTemplate(VSS.getWebContext().project.id, VSS.getWebContext().team.id, id)
+                if (template) {
+                    this._actionsHub.WorkItemTemplateItemAdded.invoke(template);
+                    return true;
+                }
+            }
+            catch (e) {
+                return false;
+            }
+
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
 
     public async deleteBugBash(bugBash: IBugBash): Promise<boolean> {         
         let deleted = await BugBashManager.deleteBugBash(bugBash);

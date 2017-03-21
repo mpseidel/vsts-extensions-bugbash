@@ -2,6 +2,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
+import { Fabric } from "./OfficeFabric/Fabric";
+
 // vsts imports
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 
@@ -41,7 +43,7 @@ export class Hub extends React.Component<IHubProps, IHubState> {
 
         const actionsHub = new ActionsHub();
         const storeHub = new StoresHub(actionsHub);
-        const actionsCreator = new ActionsCreator(actionsHub, storeHub.bugBashItemStore, storeHub.workItemFieldStore, storeHub.workItemTemplateStore, storeHub.workItemTypeStore);
+        const actionsCreator = new ActionsCreator(actionsHub, storeHub.bugBashItemStore, storeHub.workItemFieldStore, storeHub.workItemTemplateStore, storeHub.workItemTypeStore, storeHub.workItemTemplateItemStore);
 
         this._context = {
             actions: actionsHub,
@@ -59,21 +61,36 @@ export class Hub extends React.Component<IHubProps, IHubState> {
     }
 
     public render(): JSX.Element {
+        let view;
+
         if (!this.state) {
-            return <Loading />;
+            view = <Loading />;
         }
-        switch (this.state.hubViewMode) {            
-            case HubViewMode.All:
-                return <AllBugBashesView context={this._context} />;
-            case HubViewMode.New:
-                return <NewBugBashView context={this._context} />;
-            case HubViewMode.Edit:
-                return <EditBugBashView context={this._context} id={this.state.id} />;
-            case HubViewMode.View:
-                return <ViewBugBashView context={this._context} id={this.state.id} />;
-            default:
-                return <Loading />;
+        else {
+            switch (this.state.hubViewMode) {            
+                case HubViewMode.All:
+                    view = <AllBugBashesView context={this._context} />;
+                    break;
+                case HubViewMode.New:
+                    view = <NewBugBashView context={this._context} />;
+                    break;
+                case HubViewMode.Edit:
+                    view = <EditBugBashView context={this._context} id={this.state.id} />;
+                    break;
+                case HubViewMode.View:
+                    view = <ViewBugBashView context={this._context} id={this.state.id} />;
+                    break;
+                default:
+                    view = <Loading />;
+                    break;
+            }
         }
+
+        return (
+            <Fabric className="fabric-container">
+                {view}
+            </Fabric>
+        );
     }
 
     private async _initialize() {
