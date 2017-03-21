@@ -145,7 +145,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
             else {
                 let v1 = w1.fields[this.state.sortColumn];
                 let v2 = w2.fields[this.state.sortColumn];
-                return this.state.sortOrder === "desc" ? -1 * Utils_String.defaultComparer(v1, v2) : Utils_String.defaultComparer(v1, v2);
+                return this.state.sortOrder === "desc" ? -1 * Utils_String.ignoreCaseComparer(v1, v2) : Utils_String.ignoreCaseComparer(v1, v2);
             }
         });
 
@@ -182,7 +182,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
 
     @autobind
     private _changeSort(sortColumn: string, sortOrder: string): void {
-         this.setState(this._mergeState({sortColumn: sortColumn, sortOrder: sortOrder}));
+        this.setState(this._mergeState({sortColumn: sortColumn, sortOrder: sortOrder}));
     }
 
     @autobind

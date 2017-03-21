@@ -95,7 +95,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
     private _canSaveWorkItem(): boolean {
         let newWorkItemFieldValues = this.state.newWorkItemFieldValues || {};
         for (let manualField of this.props.item.manualFields) {
-            if (!newWorkItemFieldValues[manualField]) {
+            if (!newWorkItemFieldValues[manualField] || newWorkItemFieldValues[manualField].trim() !== "") {
                 return false;
             }
         }

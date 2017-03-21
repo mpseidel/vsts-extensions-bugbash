@@ -1,7 +1,8 @@
 import * as React from "react";
 import { autobind } from "../OfficeFabric/Utilities";
 import { TextField } from "../OfficeFabric/TextField";
-import { IconButton } from "../OfficeFabric/Button";
+import { CommandBar } from "../OfficeFabric/CommandBar";
+import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 
 import { WorkItem, CommentSortOrder, WorkItemComment } from "TFS/WorkItemTracking/Contracts";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
@@ -34,8 +35,6 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
             comments: [],
             newComment: ""
         };
-
-        this._initialize(props.workItem.id);
     }
 
     public render(): JSX.Element {
@@ -44,16 +43,21 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
         }
         else {
             return (
-                <div className="workitem-discussion-container">
+                <div className="workitem-discussion-container">                    
                     { this.state.error && (<MessagePanel message={this.state.error} messageType={MessageType.Error} /> )}
-                    <IconButton icon="ChromeClose" title="Close" className="close-button" onClick={() => this.props.onClose()} />
+                    <CommandBar className="discussions-view-toolbar" items={this._getMenuItems()} />
+                    <TextField inputClassName="comment-textarea" multiline={true} label='Add a comment' className="add-comment-area" value={this.state.newComment || ""} onChanged={this._commentChanged} onKeyUp={this._onEnter} />
+
                     <div className="workitem-comments">
-                        <TextField multiline={true} label='Add a comment' value={this.state.newComment || ""} onChanged={this._commentChanged} onKeyUp={this._onEnter} />
                         {this._getComments()}
                     </div>
                 </div>
             );
         }
+    }
+
+    public componentDidMount() {
+        this._initialize(this.props.workItem.id);    
     }
 
     public componentWillReceiveProps(nextProps: IWorkItemDiscussionProps) {
@@ -63,13 +67,39 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
     }
 
     private async _initialize(workItemId: number) {
+        this.setState({
+            loadingState: LoadingState.Loading,
+            comments: [],
+            newComment: ""
+        });
+
         let comments = await WitClient.getClient().getComments(workItemId);
+
         this.setState({
             loadingState: LoadingState.Loaded,
+            newComment: "",
             comments: comments.comments.sort((c1: WorkItemComment, c2: WorkItemComment) => {
                 return -1 * Utils_Date.defaultComparer(c1.revisedDate, c2.revisedDate);
             })
         });
+    }
+
+    @autobind
+    private _getMenuItems(): IContextualMenuItem[] {
+        return [
+            {
+                key: "refresh", name: "Refresh", title: "Refresh", iconProps: {iconName: "Refresh"},
+                onClick: () => {
+                    this._initialize(this.props.workItem.id);
+                }
+            },            
+            {
+                key: "close", name: "Close", title: "Close view", iconProps: {iconName: "ChromeClose"},
+                onClick: () => {
+                    this.props.onClose();
+                }
+            }                    
+        ];        
     }
 
     @autobind
@@ -79,22 +109,23 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
 
     @autobind
     private async _onEnter(event: React.KeyboardEvent<HTMLInputElement>) {
-        if (!event.shiftKey && event.keyCode === 13 && this.state.newComment.trim() !== "") {            
-            event.defaultPrevented = true;
-
+        if (!event.shiftKey && event.keyCode === 13 && this.state.newComment.trim() !== "") {
             // save work item
+            let commentText = this.state.newComment;
+            this.setState({...this.state, newComment: "", error: ""});
+
             let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
             patchDocument.push({
                 op: Operation.Add,
-                path: `/fields/System.History`,
-                value: this.state.newComment
-            } as JsonPatchOperation);
-           
+                path: "/fields/System.History",
+                value: commentText
+            } as JsonPatchOperation);                    
+
             try {
                 let workItem = await WitClient.getClient().updateWorkItem(patchDocument, this.props.workItem.id);
                 let newComment: WorkItemComment = {
-                    text: this.state.newComment,
-                    revisedBy: {id: VSS.getWebContext().user.id, name: VSS.getWebContext().user.name, url: ""},
+                    text: commentText,
+                    revisedBy: {id: VSS.getWebContext().user.id, name: `${VSS.getWebContext().user.name} <${VSS.getWebContext().user.uniqueName}>`, url: ""},
                     revisedDate: new Date(workItem.fields["System.ChangedDate"]),
                     revision: workItem.rev,
                     _links: {},
@@ -104,8 +135,8 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
                 this.setState({...this.state, comments: [newComment].concat(this.state.comments), newComment: "", error: ""});
             }
             catch (e) {
-                this.setState({...this.state, error: e.message});
-            }
+                this.setState({...this.state, error: e.message, newComment: ""});
+            }            
         }     
     }
 
