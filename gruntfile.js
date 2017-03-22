@@ -35,6 +35,19 @@
                     }
                 ]
             },
+            bundle: {
+                files: [
+                    {
+                        expand: true, 
+                        flatten: true, 
+                        src: [
+                            "dist/Hub.js"
+                        ], 
+                        dest: "dist/scripts",
+                        filter: "isFile" 
+                    }
+                ]
+            },
             libs: {
                 files: [
                     {
@@ -206,7 +219,27 @@
         clean: {
             build: ["dist", "temp", "*.vsix"],
             temp: ["temp"],
+            dist_scripts: ["dist/scripts"],
+            bundle: ["dist/Hub.js"],
             all: ["dist", "typings", "node_modules", "temp", "*.vsix", "scripts/OfficeFabric", "scripts/microsoft", "scripts/uifabric", ".sass-cache"]
+        },
+        webpack: {
+            bundle: {
+                entry: {
+                    app: "./dist/scripts/Hub.js"
+                },
+                output: {
+                    filename: "./dist/Hub.js",
+                    libraryTarget: "amd"
+                },
+                externals: [{
+                        "q": true,
+                        "react": true,
+                        "react-dom": true
+                    },
+                    /^VSS\/.*/, /^TFS\/.*/, /^q$/
+                ]
+            }
         }
     });
 
@@ -216,14 +249,21 @@
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-webpack');
     grunt.loadNpmTasks("grunt-exec");
     grunt.loadNpmTasks("grunt-ts");
     grunt.loadNpmTasks("grunt-typings");
 
     grunt.registerTask("install", ["typings:install", "copy:OfficeFabric"]);
     grunt.registerTask("copy_files", ["copy:root", "copy:img", "copy:libs"]);
+    grunt.registerTask("bundle", ["webpack:bundle"]);
 
-    grunt.registerTask("build", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "uglify:scripts", "clean:temp", "copy:OfficeFabric_dist"]);
+    grunt.registerTask("build", ["clean:build", "copy_files", 
+        "sass:dist", "cssmin:target", 
+        "ts:build", "uglify:scripts", 
+        "clean:temp", "copy:OfficeFabric_dist", "bundle",
+        "clean:dist_scripts", "copy:libs", "copy:bundle", "clean:bundle"]);
+
     grunt.registerTask("build_dev", ["clean:build", "copy_files", "sass:dist", "cssmin:target", "ts:build", "copy:js", "clean:temp", "copy:OfficeFabric_dist"]);
 
     grunt.registerTask("package", ["build", "exec:package"]);
