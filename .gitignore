@@ -11,3 +11,4 @@ css/*.css.map
 scripts/OfficeFabric
 scripts/microsoft
 scripts/uifabric
+npm-debug.log
