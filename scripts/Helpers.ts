@@ -5,6 +5,7 @@ import Utils_Array = require("VSS/Utils/Array");
 import {JsonPatchDocument, JsonPatchOperation, Operation} from "VSS/WebApi/Contracts";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
 import { WorkItem } from "TFS/WorkItemTracking/Contracts";
+import * as WitBatchClient from "TFS/WorkItemTracking/BatchRestClient";
 
 /**
  * Parse a distinct display name string into an entity reference object
@@ -94,12 +95,20 @@ export async function saveWorkItem(id: number, workItemType: string, fieldValues
         } as JsonPatchOperation);
     }
 
-    if (id <= 0) {
-        return await WitClient.getClient().createWorkItem(patchDocument, VSS.getWebContext().project.id, workItemType);
+    return await WitClient.getClient().updateWorkItem(patchDocument, id);
+}
+
+export async function createWorkItem(workItemType: string, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
+    let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
+    for (let fieldRefName in fieldValues) {
+        patchDocument.push({
+            op: Operation.Add,
+            path: `/fields/${fieldRefName}`,
+            value: fieldValues[fieldRefName]
+        } as JsonPatchOperation);
     }
-    else {
-        return await WitClient.getClient().updateWorkItem(patchDocument, id);
-    }
+
+    return await WitClient.getClient().createWorkItem(patchDocument, VSS.getWebContext().project.id, workItemType);
 }
 
 export function isWorkItemAccepted(workItem: WorkItem): boolean {
@@ -126,4 +135,41 @@ export function isWorkItemRejected(workItem: WorkItem): boolean {
 
 export function getBugBashTag(bugbashId: string): string {
     return `BugBash_${bugbashId}`;
+}
+
+export async function removeFromBugBash(bugBashId: string, workItems: WorkItem[]): Promise<void> {
+    let updates: [number, JsonPatchDocument][] = [];
+
+    for (const workItem of workItems){
+        let tagArr: string[] = (workItem.fields["System.Tags"] as string || "").split(";");
+        tagArr.forEach((t: string, i: number) => { tagArr[i] = t.trim(); });
+
+        // remove bugbash id tag
+        let index = tagArr.indexOf(getBugBashTag(bugBashId));
+        if (index !== -1) {
+            tagArr.splice(index, 1);
+        }
+
+        // remove bugbash reject tag
+        index = tagArr.indexOf(Constants.BUGBASH_REJECT_TAG);
+        if (index !== -1) {
+            tagArr.splice(index, 1);
+        }
+
+        // remove bugbash accept tag
+        index = tagArr.indexOf(Constants.BUGBASH_ACCEPT_TAG);
+        if (index !== -1) {
+            tagArr.splice(index, 1);
+        }
+        
+        let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [{
+                op: Operation.Add,
+                path: `/fields/System.Tags`,
+                value: tagArr.join(";")
+            } as JsonPatchOperation];
+
+        updates.push([workItem.id, patchDocument]);
+    }
+
+    await WitBatchClient.getClient().updateWorkItemsBatch(updates);
 }

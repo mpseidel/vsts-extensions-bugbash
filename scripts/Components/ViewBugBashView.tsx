@@ -7,7 +7,7 @@ import { MessagePanel, MessageType } from "./MessagePanel";
 import { WorkItemsViewer } from "./WorkItemsViewer";
 import { NewWorkItemCreator } from "./NewWorkItemCreator";
 import { WorkItemDiscussion } from "./WorkItemDiscussion";
-import { isWorkItemAccepted, isWorkItemRejected, getBugBashTag } from "../Helpers";
+import { isWorkItemAccepted, isWorkItemRejected, getBugBashTag, removeFromBugBash } from "../Helpers";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
@@ -211,10 +211,18 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                 }
             },
             {
-                key: "OpenQuery", name: "Open as query", title: "Open as a query", iconProps: {iconName: "OpenInNewWindow"}, 
+                key: "OpenQuery", name: "Open as query", title: "Open all workitems as a query", iconProps: {iconName: "OpenInNewWindow"}, 
+                disabled: this.state.workItemResults.length === 0,
                 onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                     let url = `${VSS.getWebContext().host.uri}/${VSS.getWebContext().project.id}/_workitems?_a=query&wiql=${encodeURIComponent(this._getWiql().query)}`;
                     window.open(url, "_parent");
+                }
+            },
+            {
+                key: "Remove", name: "Remove from bug bash", title: "Remove all workitems from the bug bash instance", iconProps: {iconName: "RemoveLink"}, 
+                disabled: this.state.workItemResults.length === 0,
+                onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                    this._removeWorkItemsFromBugBash();
                 }
             }
         ];        
@@ -273,5 +281,26 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
     private _addWorkItem(workItem: WorkItem) {
         let workItems = [workItem].concat(this.state.workItemResults);
         this.setState(this._mergeState({workItemResults: workItems}));
+    }
+
+    @autobind
+    private async _removeWorkItemsFromBugBash() {
+        if (this.state.workItemResults.length > 0) {
+            let dialogService: IHostDialogService = await VSS.getService(VSS.ServiceIds.Dialog) as IHostDialogService;
+            try {
+                await dialogService.openMessageDialog("Are you sure you want to remove all the work items from this bugbash instance?", { useBowtieStyle: true });  
+                try {
+                    removeFromBugBash(this.state.item.id, this.state.workItemResults);                    
+                    this.setState({...this.state, workItemError: null, workItemResults: []});
+                }
+                catch (e) {
+                    this.setState({...this.state, workItemError: e.message});
+                }          
+            }
+            catch (e) {
+                // user selected "No"" in dialog
+                return;
+            }    
+        }
     }
 }

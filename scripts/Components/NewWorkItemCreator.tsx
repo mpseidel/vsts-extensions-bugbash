@@ -8,7 +8,7 @@ import { WorkItemTemplate, WorkItem, FieldType } from "TFS/WorkItemTracking/Cont
 
 import { IBaseProps, IBugBash } from "../Models";
 import { MessagePanel, MessageType } from "./MessagePanel";
-import { saveWorkItem, getBugBashTag } from "../Helpers";
+import { createWorkItem, getBugBashTag } from "../Helpers";
 
 export interface INewWorkItemCreatorProps extends IBaseProps {
     item: IBugBash;
@@ -36,7 +36,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
                 { this.state.workItemError && <MessagePanel message={this.state.workItemError} messageType={MessageType.Error} />}
                 <Label className="add-workitem-label">Add work item</Label>
                 {this._getManualFieldsNode()}
-                <Button className="create-new-button" disabled={!this._canSaveWorkItem()} buttonType={ButtonType.primary} onClick={this._onSaveClick}>Save</Button>
+                <Button className="create-new-button" disabled={!this._canCreateWorkItem()} buttonType={ButtonType.primary} onClick={this._onSaveClick}>Save</Button>
             </div>
         );
     }
@@ -45,7 +45,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
     private async _onSaveClick() {
         let newWorkItemFieldValues = {...this.state.newWorkItemFieldValues} || {};
 
-        if (!this._canSaveWorkItem()) {
+        if (!this._canCreateWorkItem()) {
             return;
         }        
 
@@ -69,7 +69,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
         }
 
         try {
-            let workItem = await saveWorkItem(0, this.props.item.workItemType, newWorkItemFieldValues);
+            let workItem = await createWorkItem(this.props.item.workItemType, newWorkItemFieldValues);
             this.setState({...this.state, workItemError: null, newWorkItemFieldValues: {}});
             this.props.addWorkItem(workItem);
         }
@@ -79,7 +79,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
     }
 
      @autobind
-    private _canSaveWorkItem(): boolean {
+    private _canCreateWorkItem(): boolean {
         let newWorkItemFieldValues = this.state.newWorkItemFieldValues || {};
         for (let manualField of this.props.item.manualFields) {
             if (!newWorkItemFieldValues[manualField] || newWorkItemFieldValues[manualField].trim() === "") {

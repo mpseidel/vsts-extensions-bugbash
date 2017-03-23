@@ -22,7 +22,7 @@ import { UrlActions, IBaseProps, IBugBash, LoadingState, Constants } from "../Mo
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { IdentityView } from "./IdentityView";
-import { saveWorkItem, isWorkItemAccepted, isWorkItemRejected, getBugBashTag } from "../Helpers";
+import { saveWorkItem, isWorkItemAccepted, isWorkItemRejected, getBugBashTag, removeFromBugBash } from "../Helpers";
 
 interface IWorkItemsViewerState {
     workItemError?: string;
@@ -82,6 +82,13 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                     onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                         let url = `${VSS.getWebContext().host.uri}/${VSS.getWebContext().project.id}/_workitems?_a=query&wiql=${encodeURIComponent(this._getSelectedWorkItemsWiql())}`;
                         window.open(url, "_parent");
+                    }
+                },
+                {
+                    key: "Remove", name: "Remove from bug bash", title: "Remove selected workitems from the bug bash instance", iconProps: {iconName: "RemoveLink"}, 
+                    disabled: this._selection.getSelectedCount() == 0,
+                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                        this._removeSelectedWorkItemsFromBugBash();
                     }
                 }
             ];
@@ -385,6 +392,35 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
     }
 
     @autobind
+    private async _removeSelectedWorkItemsFromBugBash() {
+        let selectedWorkItems = this._selection.getSelection() as WorkItem[];
+        if (selectedWorkItems.length > 0) {
+            let dialogService: IHostDialogService = await VSS.getService(VSS.ServiceIds.Dialog) as IHostDialogService;
+            try {
+                await dialogService.openMessageDialog("Are you sure you want to remove the selected work items from this bugbash instance?", { useBowtieStyle: true });  
+                try {
+                    removeFromBugBash(this.props.bugBashItem.id, selectedWorkItems);
+                    
+                    let workItemResults = this.props.workItems.filter((item: WorkItem) => {
+                        return Utils_Array.findIndex(selectedWorkItems, (wi: WorkItem) => Utils_String.equals(""+wi.id, ""+item.id)) === -1;
+                    });
+
+                    this._selection.setAllSelected(false);
+                    this.setState({...this.state, workItemError: null});
+                    this.props.refreshWorkItems(workItemResults);
+                }
+                catch (e) {
+                    this.setState({...this.state, workItemError: e.message});
+                }          
+            }
+            catch (e) {
+                // user selected "No"" in dialog
+                return;
+            }    
+        }
+    }
+
+    @autobind
     private async _deleteSelectedWorkItems() {
         let selectedWorkItems = this._selection.getSelection() as WorkItem[];
         if (selectedWorkItems.length > 0) {
@@ -409,7 +445,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 // user selected "No"" in dialog
                 return;
             }    
-        }        
+        }
     }
 
     private _getSelectedWorkItemsWiql(): string {
