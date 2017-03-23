@@ -75,6 +75,14 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                     onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                         this._mergeSelectedWorkItems();
                     }
+                },
+                {
+                    key: "OpenQuery", name: "Open as query", title: "Open selected workitems as a query", iconProps: {iconName: "OpenInNewWindow"}, 
+                    disabled: this._selection.getSelectedCount() == 0,
+                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                        let url = `${VSS.getWebContext().host.uri}/${VSS.getWebContext().project.id}/_workitems?_a=query&wiql=${encodeURIComponent(this._getSelectedWorkItemsWiql())}`;
+                        window.open(url, "_parent");
+                    }
                 }
             ];
 
@@ -402,5 +410,12 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 return;
             }    
         }        
+    }
+
+    private _getSelectedWorkItemsWiql(): string {
+        let selectedWorkItems = this._selection.getSelection() as WorkItem[];
+        let ids = selectedWorkItems.map((w:WorkItem) => w.id).join(",");
+
+        return `SELECT [System.Id], [System.Title], [System.CreatedBy], [System.CreatedDate], [System.State], [System.AssignedTo], [System.AreaPath] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.ID] IN (${ids}) ORDER BY [System.CreatedDate] DESC`
     }
 }

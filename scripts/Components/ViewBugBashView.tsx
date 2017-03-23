@@ -209,7 +209,14 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                 onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                     this._refreshWorkItemResults();
                 }
-            }                    
+            },
+            {
+                key: "OpenQuery", name: "Open as query", title: "Open as a query", iconProps: {iconName: "OpenInNewWindow"}, 
+                onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                    let url = `${VSS.getWebContext().host.uri}/${VSS.getWebContext().project.id}/_workitems?_a=query&wiql=${encodeURIComponent(this._getWiql().query)}`;
+                    window.open(url, "_parent");
+                }
+            }
         ];        
     }
 
@@ -239,7 +246,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
         const item = this.props.context.stores.bugBashItemStore.getItem(this.props.id);
 
         return {
-            query: `SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.WorkItemType] = '${item.workItemType}' AND [System.Tags] CONTAINS '${getBugBashTag(item.id)}' ORDER BY [System.CreatedDate] DESC`
+            query: `SELECT [System.Id], [System.Title], [System.CreatedBy], [System.CreatedDate], [System.State], [System.AssignedTo], [System.AreaPath] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.WorkItemType] = '${item.workItemType}' AND [System.Tags] CONTAINS '${getBugBashTag(item.id)}' ORDER BY [System.CreatedDate] DESC`
         };
     }
 
