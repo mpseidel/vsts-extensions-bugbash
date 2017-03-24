@@ -83,7 +83,8 @@ export class BugBash {
         return this._model.title.trim().length > 0
             && this._model.title.length <= 128
             && this._model.manualFields.length > 0
-            && this._model.workItemType.trim().length > 0;
+            && this._model.workItemType.trim().length > 0
+            && (!this._model.startTime || !this._model.endTime || Utils_Date.defaultComparer(this._model.startTime, this._model.endTime) < 0);
     }
 
     public attachChanged(handler: () => void) {

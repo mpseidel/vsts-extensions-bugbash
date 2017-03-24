@@ -1,6 +1,7 @@
 import * as React from "react";
 import { List } from "../OfficeFabric/List";
 import { autobind } from "../OfficeFabric/Utilities";
+import { Label } from "../OfficeFabric/Label";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import Utils_Date = require("VSS/Utils/Date");
@@ -13,7 +14,10 @@ import { NewBugBashButton } from "./NewBugBashButton";
 import { MessagePanel, MessageType } from "./MessagePanel";
 
 interface IAllHubViewState extends IHubViewState {
-    items: IBugBash[];
+    allItems: IBugBash[];
+    pastItems: IBugBash[];
+    currentItems: IBugBash[];
+    upcomingItems: IBugBash[];
 }
 
 export class AllBugBashesView extends HubView<IAllHubViewState> {
@@ -34,11 +38,37 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
             return <Loading />;
         }
         else {
-            if (this.state.items.length == 0) {
+            if (this.state.allItems.length == 0) {
                 return <MessagePanel message="No instance of bug bash exists in the context of current team." messageType={MessageType.Info} />
             }
             else {
-                return <List items={this.state.items} className="instance-list" onRenderCell={this._onRenderCell} />
+                return (
+                    <div className="instance-list-container">
+                        <div className="instance-list-section">
+                            <Label className="header">Past Bug Bashes</Label>
+                            <div className="instance-list-content">
+                                {this.state.pastItems.length === 0 && <MessagePanel message="No past bug bashes." messageType={MessageType.Info} />}
+                                {this.state.pastItems.length > 0 && <List items={this.state.pastItems} className="instance-list" onRenderCell={this._onRenderCell} />}
+                            </div>
+                        </div>
+
+                        <div className="instance-list-section">
+                            <Label className="header">Ongoing Bug Bashes</Label>
+                            <div className="instance-list-content">
+                                {this.state.currentItems.length === 0 && <MessagePanel message="No ongoing bug bashes." messageType={MessageType.Info} />}
+                                {this.state.currentItems.length > 0 && <List items={this.state.currentItems} className="instance-list" onRenderCell={this._onRenderCell} />}
+                            </div>
+                        </div>
+
+                        <div className="instance-list-section">
+                            <Label className="header">Upcoming Bug Bashes</Label>
+                            <div className="instance-list-content">
+                                {this.state.upcomingItems.length === 0 && <MessagePanel message="No upcoming bug bashes." messageType={MessageType.Info} />}
+                                {this.state.upcomingItems.length > 0 && <List items={this.state.upcomingItems} className="instance-list" onRenderCell={this._onRenderCell} />}
+                            </div>
+                        </div>
+                    </div>
+                );                
             }
         }
     }
@@ -48,8 +78,13 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
     }
 
     protected getStateFromStore(): IAllHubViewState {
+        let allItems = this.props.context.stores.bugBashItemStore.getAll();
+        let currentTime = new Date();
         return {
-            items: this.props.context.stores.bugBashItemStore.getAll(),
+            allItems: allItems,
+            pastItems: this._getPastBugBashes(allItems, currentTime),
+            currentItems: this._getCurrentBugBashes(allItems, currentTime),
+            upcomingItems: this._getUpcomingBugBashes(allItems, currentTime),
             loadingState: this.props.context.stores.bugBashItemStore.isLoaded() ? LoadingState.Loaded : LoadingState.Loading
         };
     }
@@ -72,5 +107,40 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
     private async _onRowClick(item: IBugBash) {
         let navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
         navigationService.updateHistoryEntry(UrlActions.ACTION_VIEW, {id: item.id});
+    }
+
+    private _getPastBugBashes(list: IBugBash[], currentTime: Date): IBugBash[] {
+        return list.filter((item: IBugBash) => {
+            return item.endTime && Utils_Date.defaultComparer(item.endTime, currentTime) < 0;
+        }).sort((b1: IBugBash, b2: IBugBash) => {
+            return Utils_Date.defaultComparer(b1.endTime, b2.endTime);
+        });
+    }
+
+    private _getCurrentBugBashes(list: IBugBash[], currentTime: Date): IBugBash[] {        
+        return list.filter((item: IBugBash) => {
+            if (!item.startTime && !item.endTime) {
+                return true;
+            }
+            else if(!item.startTime && item.endTime) {
+                return Utils_Date.defaultComparer(item.endTime, currentTime) >= 0;
+            }
+            else if (item.startTime && !item.endTime) {
+                return Utils_Date.defaultComparer(item.startTime, currentTime) <= 0;
+            }
+            else {
+                return Utils_Date.defaultComparer(item.startTime, currentTime) <= 0 && Utils_Date.defaultComparer(item.endTime, currentTime) >= 0;
+            }
+        }).sort((b1: IBugBash, b2: IBugBash) => {
+            return Utils_Date.defaultComparer(b1.startTime, b2.startTime);
+        });
+    }
+
+    private _getUpcomingBugBashes(list: IBugBash[], currentTime: Date): IBugBash[] {
+        return list.filter((item: IBugBash) => {
+            return item.startTime && Utils_Date.defaultComparer(item.startTime, currentTime) > 0
+        }).sort((b1: IBugBash, b2: IBugBash) => {
+            return Utils_Date.defaultComparer(b1.startTime, b2.startTime);
+        });
     }
 }
