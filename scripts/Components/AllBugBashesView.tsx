@@ -45,7 +45,7 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
                 return (                    
                     <div className="instance-list-container">
                         <div className="instance-list-section">
-                            <Label className="header">Past Bug Bashes</Label>
+                            <Label className="header">Past Bug Bashes ({this.state.pastItems.length})</Label>
                             <div className="instance-list-content">
                                 {this.state.pastItems.length === 0 && <MessagePanel message="No past bug bashes." messageType={MessageType.Info} />}
                                 {this.state.pastItems.length > 0 && <List items={this.state.pastItems} className="instance-list" onRenderCell={this._onRenderCell} />}
@@ -53,7 +53,7 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
                         </div>
 
                         <div className="instance-list-section">
-                            <Label className="header">Ongoing Bug Bashes</Label>
+                            <Label className="header">Ongoing Bug Bashes ({this.state.currentItems.length})</Label>
                             <div className="instance-list-content">
                                 {this.state.currentItems.length === 0 && <MessagePanel message="No ongoing bug bashes." messageType={MessageType.Info} />}
                                 {this.state.currentItems.length > 0 && <List items={this.state.currentItems} className="instance-list" onRenderCell={this._onRenderCell} />}
@@ -61,7 +61,7 @@ export class AllBugBashesView extends HubView<IAllHubViewState> {
                         </div>
 
                         <div className="instance-list-section">
-                            <Label className="header">Upcoming Bug Bashes</Label>
+                            <Label className="header">Upcoming Bug Bashes ({this.state.upcomingItems.length})</Label>
                             <div className="instance-list-content">
                                 {this.state.upcomingItems.length === 0 && <MessagePanel message="No upcoming bug bashes." messageType={MessageType.Info} />}
                                 {this.state.upcomingItems.length > 0 && <List items={this.state.upcomingItems} className="instance-list" onRenderCell={this._onRenderCell} />}

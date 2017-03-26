@@ -68,13 +68,20 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                                     }
                                 }} />
                             <CommandBar className="results-view-menu-toolbar" items={this._getMenuItems()} 
-                                farItems={[{
-                                    key: "Home", name: "Home", title: "Return to home view", iconProps: {iconName: "Home"}, 
-                                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
-                                        let navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
-                                        navigationService.updateHistoryEntry(UrlActions.ACTION_ALL, null);
-                                    }
-                                }]} />
+                                farItems={
+                                    [
+                                        {
+                                            key: "resultCount", name: `${this.state.workItemResults.length} workitems`, className: "result-count"
+                                        },
+                                        {
+                                            key: "Home", name: "Home", title: "Return to home view", iconProps: {iconName: "Home"}, 
+                                            onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                                                let navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
+                                                navigationService.updateHistoryEntry(UrlActions.ACTION_ALL, null);
+                                            }
+                                        }
+                                    ]
+                                } />
                         </div>
                         <div className="contents">
                             <WorkItemsViewer 

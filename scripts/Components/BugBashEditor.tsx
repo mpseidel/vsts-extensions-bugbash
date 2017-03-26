@@ -158,7 +158,7 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                 }
             },
             {
-                key: "results", name: "Go to results", title: "Go to results view", iconProps: {iconName: "Back"}, disabled: this._item.isNew(),
+                key: "results", name: "Show results", title: "Show results", iconProps: {iconName: "ShowResults"}, disabled: this._item.isNew(),
                 onClick: async (event?: React.MouseEvent<HTMLElement>, item?: IContextualMenuItem) => {
                     if (!this._item.isNew()) {
                         if (this._item.isDirty()) {
