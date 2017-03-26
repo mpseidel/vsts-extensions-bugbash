@@ -4,8 +4,6 @@ import { CommandBar } from "../OfficeFabric/CommandBar";
 import { DatePicker } from "../OfficeFabric/DatePicker";
 import { Label } from "../OfficeFabric/Label";
 import { Dropdown } from "../OfficeFabric/components/Dropdown/Dropdown";
-import { ChoiceGroup } from "../OfficeFabric/components/ChoiceGroup/ChoiceGroup";
-import { IChoiceGroupOption } from "../OfficeFabric/components/ChoiceGroup/ChoiceGroup.Props";
 import { IDropdownOption, IDropdownProps } from "../OfficeFabric/components/Dropdown/Dropdown.Props";
 import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 import { TagPicker, ITag } from '../OfficeFabric/components/pickers/TagPicker/TagPicker';
@@ -17,9 +15,11 @@ import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 import Utils_Date = require("VSS/Utils/Date");
 
-import { IBugBash, IBaseProps, LoadingState, UrlActions, BugBashRecurrence, Constants } from "../Models";
+import { IBugBash, IBaseProps, LoadingState, UrlActions, Constants } from "../Models";
 import { BugBash } from "../BugBash";
 import { Loading } from "./Loading";
+import { isInteger } from "../Helpers";
+import { InputError } from "./InputError";
 
 import { MessagePanel, MessageType } from "./MessagePanel";
 
@@ -158,7 +158,7 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                 }
             },
             {
-                key: "results", name: "Go to bug list", title: "Go to bug list", iconProps: {iconName: "Back"}, disabled: this._item.isNew(),
+                key: "results", name: "Go to results", title: "Go to results view", iconProps: {iconName: "Back"}, disabled: this._item.isNew(),
                 onClick: async (event?: React.MouseEvent<HTMLElement>, item?: IContextualMenuItem) => {
                     if (!this._item.isNew()) {
                         if (this._item.isDirty()) {
@@ -193,21 +193,17 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
             tagPickerClassName += " invalid";
         }
 
-        let recurrenceChoices: IChoiceGroupOption[]  = [];
-        for (let enumMember in BugBashRecurrence) {
-            if (!isNaN(parseInt(enumMember))) {
-                recurrenceChoices.push({
-                    key: `${enumMember}`,
-                    text: BugBashRecurrence[enumMember],
-                    checked: parseInt(enumMember) === model.reccurence
-                });
-            }
-        }
-
         return (
             <div className="editor-view">
                 <div className="editor-view-menu">
-                    <CommandBar items={menuitems} />
+                    <CommandBar items={menuitems} 
+                        farItems={[{
+                            key: "Home", name: "Home", title: "Return to home view", iconProps: {iconName: "Home"}, 
+                            onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                                let navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
+                                navigationService.updateHistoryEntry(UrlActions.ACTION_ALL, null);
+                            }
+                        }]} />
                 </div>
                 <div className="editor-view-contents">
                     <div className="first-section">
@@ -222,20 +218,11 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                         <div className="second-section">                    
                             <DatePicker label="Start Date" allowTextInput={true} isRequired={false} value={model.startTime} onSelectDate={(newValue: Date) => this._item.updateStartTime(newValue)} />
                             <DatePicker label="Finish Date" allowTextInput={true} isRequired={false} value={model.endTime} onSelectDate={(newValue: Date) => this._item.updateEndTime(newValue)} />
-                            { model.startTime && model.endTime && Utils_Date.defaultComparer(model.startTime, model.endTime) >= 0 && 
-                                (
-                                    <div className="bugbash-error">Bugbash end time cannot be a date before bugbash start time.</div>
-                                )}
-
-                            <ChoiceGroup
-                                label="Reccurence"
-                                options={recurrenceChoices}
-                                onChange={(e, option: IChoiceGroupOption) => this._item.updateRecurrence(parseInt(option.key))}
-                            />
+                            { model.startTime && model.endTime && Utils_Date.defaultComparer(model.startTime, model.endTime) >= 0 &&  (<InputError error="Bugbash end time cannot be a date before bugbash start time." />)}
                         </div>
                         <div className="third-section">
-                            <Dropdown label="Work item type" disabled={!this._item.isNew()} onRenderList={this._onRenderCallout} required={true} options={witItems} onChanged={(option: IDropdownOption) => this._item.updateWorkItemType(option.key as string)} />
-                            { !model.workItemType && (<div className="bugbash-error">A work item type is required.</div>) }
+                            <Dropdown label="Work item type" disabled={!this._item.isNew()} onRenderList={this._onRenderCallout} required={true} options={witItems} onChanged={(option: IDropdownOption) => this._item.updateWorkItemType(option.key as string)} />                            
+                            { !model.workItemType && (<InputError error="A work item type is required." />) }
 
                             <Dropdown label="Work item template" onRenderList={this._onRenderCallout} options={this._getTemplateDropdownOptions(model.templateId)} onChanged={(option: IDropdownOption) => this._item.updateTemplate(option.key as string)} />
                             <Label required={true}>Manually entered fields</Label>
@@ -251,7 +238,7 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
                                     }
                                 }
                             />
-                            { model.manualFields.length == 0 && (<div className="bugbash-error">Atleast one field must be manually entered.</div>) }
+                            { model.manualFields.length == 0 && (<InputError error="Atleast one field must be manually entered." />) }
                         </div>
                         <div className="fourth-section">
                             <Dropdown label="Accept Work item template" onRenderList={this._onRenderCallout} 

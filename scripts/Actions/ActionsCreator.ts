@@ -13,6 +13,7 @@ import * as WitClient from "TFS/WorkItemTracking/RestClient";
 
 export class ActionsHub {
     public InitializeBugBashItems = new Action<IBugBash[]>();
+    public ClearBugBashItems = new Action<void>();
     public BugBashItemDeleted = new Action<IBugBash>();
     public BugBashItemAdded = new Action<IBugBash>();
     public BugBashItemUpdated = new Action<IBugBash>();
@@ -40,6 +41,16 @@ export class ActionsCreator {
             this._actionsHub.InitializeBugBashItems.invoke(null);
         }
         else {            
+            let bugbashes = await BugBashManager.readBugBashes();
+            this._actionsHub.InitializeBugBashItems.invoke(bugbashes);
+        }
+    }
+
+    public async refreshAllBugBashes() {
+        if (this._bugBashItemDataProvider.isLoaded()) {
+            // refresh only if the store has already been laoded
+            this._actionsHub.ClearBugBashItems.invoke(null);
+
             let bugbashes = await BugBashManager.readBugBashes();
             this._actionsHub.InitializeBugBashItems.invoke(bugbashes);
         }

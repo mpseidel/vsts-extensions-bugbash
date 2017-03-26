@@ -26,6 +26,11 @@ export class BugBashItemStore extends Store implements IBugBashItemStore {
             }
             this._onAdd(items);
         });
+
+        actions.ClearBugBashItems.addListener(() => {
+            this._items = null;
+            this.emitChanged();
+        });
         
         actions.BugBashItemDeleted.addListener((item: IBugBash) => {
             this._onRemove(item);

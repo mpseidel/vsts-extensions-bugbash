@@ -48,17 +48,9 @@ export interface IBugBash {
     description?: string;    
     startTime?: Date;
     endTime?: Date;
-    reccurence: BugBashRecurrence;
     projectId: string;
     teamId: string;
     configTemplates: IDictionaryStringTo<string>;
-}
-
-export enum BugBashRecurrence {
-    None = 0,
-    Daily,
-    Weekly,
-    Monthly
 }
 
 export enum LoadingState {

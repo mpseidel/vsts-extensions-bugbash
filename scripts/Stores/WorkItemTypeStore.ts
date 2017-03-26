@@ -3,7 +3,6 @@ import Utils_Array = require("VSS/Utils/Array");
 import { Store } from "VSS/Flux/Store";
 import { WorkItemType } from "TFS/WorkItemTracking/Contracts";
 
-import { IBugBash } from "../Models";
 import { ActionsHub } from "../Actions/ActionsCreator";
 
 export interface IWorkItemTypeStore {

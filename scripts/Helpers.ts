@@ -85,7 +85,7 @@ export function getVsIdFromGroupUniqueName(str: string): string {
     return vsid;
 }
 
-export async function saveWorkItem(id: number, workItemType: string, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
+export async function saveWorkItem(workItem: WorkItem, workItemType: string, fieldValues: IDictionaryStringTo<string>, withRevision?: boolean): Promise<WorkItem> {
     let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
     for (let fieldRefName in fieldValues) {
         patchDocument.push({
@@ -95,7 +95,15 @@ export async function saveWorkItem(id: number, workItemType: string, fieldValues
         } as JsonPatchOperation);
     }
 
-    return await WitClient.getClient().updateWorkItem(patchDocument, id);
+    if (withRevision) {
+        patchDocument.push({
+            op: Operation.Test,
+            path: "/rev",
+            value: workItem.rev
+        } as JsonPatchOperation);
+    }
+
+    return await WitClient.getClient().updateWorkItem(patchDocument, workItem.id);
 }
 
 export async function createWorkItem(workItemType: string, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
@@ -137,6 +145,10 @@ export function getBugBashTag(bugbashId: string): string {
     return `BugBash_${bugbashId}`;
 }
 
+export function isInteger(value: string): boolean {
+    return /^\d+$/.test(value);
+}
+
 export async function removeFromBugBash(bugBashId: string, workItems: WorkItem[]): Promise<void> {
     let updates: [number, JsonPatchDocument][] = [];
 
@@ -167,6 +179,12 @@ export async function removeFromBugBash(bugBashId: string, workItems: WorkItem[]
                 path: `/fields/System.Tags`,
                 value: tagArr.join(";")
             } as JsonPatchOperation];
+
+        patchDocument.push({
+            op: Operation.Test,
+            path: "/rev",
+            value: workItem.rev
+        } as JsonPatchOperation);
 
         updates.push([workItem.id, patchDocument]);
     }

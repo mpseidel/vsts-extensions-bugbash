@@ -14,19 +14,6 @@
     .fabric-container {
         height: 100%;
     }
-
-    .all-view {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        overflow: auto;
-
-        .all-view-contents {
-            margin-top: 50px;
-        }
-    }
 }
 
 /*
@@ -64,6 +51,19 @@
     &:hover {     
         color: #106ebe;               
         text-decoration: underline;                    
+    }
+}
+
+.input-error {
+    font-size: 12px;
+    font-weight: 400;
+    color: #a80000;
+    margin: 5px 0;
+
+    .error-icon {
+        vertical-align: middle;
+        font-size: 14px;
+        margin-right: 5px;
     }
 }
 
@@ -153,28 +153,34 @@
             }
         }
 
-        .bugbash-error {
-            font-size: 12px;
-            font-weight: 400;
-            color: #a80000;
-            margin: 5px 0;
+        .ms-DatePicker {
+            margin-bottom: 0;
         }
     }
 }
 
 .all-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+
     .instance-list-container {
+        margin-top: 20px;
+
         .instance-list-section {
             margin-bottom: 20px;
 
             .header {
                 font-size: 18px;
-                font-weight: 500;
+                font-weight: 100;
                 color: #212121;
             }
 
             .instance-list-content {
-                margin-left: 0 30px;
+                margin: 0 30px;
 
                 .instance-list {
                     .instance-row {

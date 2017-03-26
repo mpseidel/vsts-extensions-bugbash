@@ -1,8 +1,9 @@
-import {  IBugBash, BugBashRecurrence } from "./Models";
+import {  IBugBash } from "./Models";
 
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 import Utils_Date = require("VSS/Utils/Date");
+import Context = require("VSS/Context");
 
 export class BugBash {
     public static getNew(): BugBash {
@@ -12,7 +13,6 @@ export class BugBash {
             __etag: 0,
             templateId: "",
             manualFields: [],
-            reccurence: BugBashRecurrence.None,
             projectId: VSS.getWebContext().project.id,
             teamId: VSS.getWebContext().team.id,
             workItemType: "",
@@ -56,7 +56,6 @@ export class BugBash {
             || !Utils_String.equals(this._model.description, this._originalModel.description)
             || !Utils_Date.equals(this._model.startTime, this._originalModel.startTime)
             || !Utils_Date.equals(this._model.endTime, this._originalModel.endTime)
-            || this._model.reccurence !== this._originalModel.reccurence
             || !Utils_String.equals(this._model.templateId, this._originalModel.templateId, true)
             || !Utils_Array.arrayEquals(this._model.manualFields, this._originalModel.manualFields, (item1: string, item2: string) => Utils_String.equals(item1, item2, true))
             || this._hasConfigTemplateChanged();
@@ -128,7 +127,7 @@ export class BugBash {
         this.fireChanged();
     }
 
-    public updateEndTime(newEndTime: Date) {
+    public updateEndTime(newEndTime: Date) {        
         this._model.endTime = newEndTime;
         this.fireChanged();
     }
@@ -140,11 +139,6 @@ export class BugBash {
 
     public updateManualFields(fieldNames: string[]) {
         this._model.manualFields = fieldNames;
-        this.fireChanged();
-    }
-
-    public updateRecurrence(recurrence: BugBashRecurrence) {
-        this._model.reccurence = recurrence;
         this.fireChanged();
     }
 }

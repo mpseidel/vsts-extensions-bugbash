@@ -4,21 +4,18 @@ import { DetailsListLayoutMode, IColumn, CheckboxVisibility, ConstrainMode } fro
 import { SelectionMode } from "../OfficeFabric/utilities/selection/interfaces";
 import { Selection } from "../OfficeFabric/utilities/selection/Selection";
 import { autobind } from "../OfficeFabric/Utilities";
-import { Label } from "../OfficeFabric/Label";
 import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
-import { TextField } from "../OfficeFabric/TextField";
 import { IconButton } from "../OfficeFabric/Button";
 import { ContextualMenu } from "../OfficeFabric/ContextualMenu";
 
-import { HostNavigationService } from "VSS/SDK/Services/Navigation";
-import { WorkItemTemplateReference, WorkItemTemplate, WorkItemField, WorkItemType, WorkItemQueryResult, Wiql, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
+import { WorkItem } from "TFS/WorkItemTracking/Contracts";
 import * as WitBatchClient from "TFS/WorkItemTracking/BatchRestClient";
 import { WorkItemFormNavigationService } from "TFS/WorkItemTracking/Services";
 import Utils_Date = require("VSS/Utils/Date");
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 
-import { UrlActions, IBaseProps, IBugBash, LoadingState, Constants } from "../Models";
+import { IBaseProps, IBugBash, Constants } from "../Models";
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { IdentityView } from "./IdentityView";
@@ -56,6 +53,10 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         };
     }
 
+    public componentWillReceiveProps(nextProps: IWorkItemsViewerProps) {
+        this.setState({...this.state, workItemError: null});
+    }
+
     public render(): JSX.Element {
         if (!this.props.areResultsReady) {
             return <Loading />;
@@ -85,7 +86,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                     }
                 },
                 {
-                    key: "Remove", name: "Remove from bug bash", title: "Remove selected workitems from the bug bash instance", iconProps: {iconName: "RemoveLink"}, 
+                    key: "Remove", name: "Unlink from bug bash", title: "Unlink selected workitems from the bug bash instance", iconProps: {iconName: "RemoveLink"}, 
                     disabled: this._selection.getSelectedCount() == 0,
                     onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                         this._removeSelectedWorkItemsFromBugBash();
@@ -314,7 +315,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         fieldValues["System.Tags"] = tagArr.join(";");
 
         try {
-            let workItem = await saveWorkItem(item.id, "", fieldValues);
+            let workItem = await saveWorkItem(item, "", fieldValues, true);
             this.setState({...this.state, workItemError: null});
             this.props.updateWorkItem(workItem);
         }
@@ -347,7 +348,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         fieldValues["System.Tags"] = tagArr.join(";");
 
         try {
-            let workItem = await saveWorkItem(item.id, "", fieldValues);
+            let workItem = await saveWorkItem(item, "", fieldValues, true);
             this.setState({...this.state, workItemError: null});
             this.props.updateWorkItem(workItem);
         }
@@ -452,6 +453,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         let selectedWorkItems = this._selection.getSelection() as WorkItem[];
         let ids = selectedWorkItems.map((w:WorkItem) => w.id).join(",");
 
-        return `SELECT [System.Id], [System.Title], [System.CreatedBy], [System.CreatedDate], [System.State], [System.AssignedTo], [System.AreaPath] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.ID] IN (${ids}) ORDER BY [System.CreatedDate] DESC`
+        return `SELECT [System.Id], [System.Title], [System.CreatedBy], [System.CreatedDate], [System.State], [System.AssignedTo], [System.AreaPath]
+                 FROM WorkItems WHERE [System.TeamProject] = @project AND [System.ID] IN (${ids}) ORDER BY [System.CreatedDate] DESC`;
     }
 }

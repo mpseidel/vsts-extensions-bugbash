@@ -67,7 +67,14 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                                         this._updateFilterText("");
                                     }
                                 }} />
-                            <CommandBar className="results-view-menu-toolbar" items={this._getMenuItems()} />
+                            <CommandBar className="results-view-menu-toolbar" items={this._getMenuItems()} 
+                                farItems={[{
+                                    key: "Home", name: "Home", title: "Return to home view", iconProps: {iconName: "Home"}, 
+                                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                                        let navigationService: HostNavigationService = await VSS.getService(VSS.ServiceIds.Navigation) as HostNavigationService;
+                                        navigationService.updateHistoryEntry(UrlActions.ACTION_ALL, null);
+                                    }
+                                }]} />
                         </div>
                         <div className="contents">
                             <WorkItemsViewer 
@@ -219,7 +226,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                 }
             },
             {
-                key: "Remove", name: "Remove from bug bash", title: "Remove all workitems from the bug bash instance", iconProps: {iconName: "RemoveLink"}, 
+                key: "Unlink", name: "Unlink workitems", title: "Unlink all workitems from the bug bash instance", iconProps: {iconName: "RemoveLink"}, 
                 disabled: this.state.workItemResults.length === 0,
                 onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                     this._removeWorkItemsFromBugBash();
