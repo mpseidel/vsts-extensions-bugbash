@@ -48,7 +48,9 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
                     { this.state.error && (<MessagePanel message={this.state.error} messageType={MessageType.Error} /> )}
                     <Label className="workitem-discussion-header">{`Discussion for work item: ${this.props.workItem.id}`}</Label>
                     <CommandBar className="discussions-view-toolbar" items={this._getMenuItems()} />
-                    <TextField inputClassName="comment-textarea" multiline={true} label='Add a comment' className="add-comment-area" value={this.state.newComment || ""} onChanged={this._commentChanged} onKeyUp={this._onEnter} />
+                    <div>
+                        <div ref={this._renderRichEditor}/>
+                    </div>
 
                     <div className="workitem-comments">
                         {this._getComments()}
@@ -105,34 +107,64 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
     }
 
     @autobind
+    private _renderRichEditor(container: HTMLElement) {
+        $(container).summernote({
+            height: 200,
+            minHeight: 200,
+            placeholder: 'Enter comment. Press ctrl+Enter to save the comment',
+            toolbar: [
+                // [groupName, [list of button]]
+                ['style', ['bold', 'italic', 'underline', 'clear']],
+                ['fontsize', ['fontsize']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link', 'picture']],
+                ['fullscreen', ['fullscreen']]
+            ],
+            callbacks: {
+                onChange: (newValue: string) => {
+                    this._commentChanged(newValue);
+                },
+                onEnter: (e) => {
+                    if (e.ctrlKey && this.state.newComment.trim() !== "") {
+                        this._saveComment();
+                        $(container).summernote('code', "");
+                        e.preventDefault();                        
+                        e.stopImmediatePropagation();
+                        e.stopPropagation();
+                    }
+                }
+            }
+        });
+    }
+
+    @autobind
     private _commentChanged(newValue: string) {
         this.setState({...this.state, newComment: newValue});
     }
 
     @autobind
-    private async _onEnter(event: React.KeyboardEvent<HTMLInputElement>) {
-        if (!event.shiftKey && event.keyCode === 13 && this.state.newComment.trim() !== "") {
-            // save work item
-            let commentText = this.state.newComment;
-            this.setState({...this.state, newComment: "", error: ""});
+    private async _saveComment() {
+        // save work item
+        let commentText = this.state.newComment;
+        this.setState({...this.state, newComment: "", error: ""});
 
-            try {
-                let workItem = await saveWorkItem(this.props.workItem, "", {"System.History": commentText});
-                let newComment: WorkItemComment = {
-                    text: commentText,
-                    revisedBy: {id: VSS.getWebContext().user.id, name: `${VSS.getWebContext().user.name} <${VSS.getWebContext().user.uniqueName}>`, url: ""},
-                    revisedDate: new Date(workItem.fields["System.ChangedDate"]),
-                    revision: workItem.rev,
-                    _links: {},
-                    url: ""
-                };
+        try {
+            let workItem = await saveWorkItem(this.props.workItem, "", {"System.History": commentText});
+            let newComment: WorkItemComment = {
+                text: commentText,
+                revisedBy: {id: VSS.getWebContext().user.id, name: `${VSS.getWebContext().user.name} <${VSS.getWebContext().user.uniqueName}>`, url: ""},
+                revisedDate: new Date(workItem.fields["System.ChangedDate"]),
+                revision: workItem.rev,
+                _links: {},
+                url: ""
+            };
 
-                this.setState({...this.state, comments: [newComment].concat(this.state.comments), newComment: "", error: ""});
-            }
-            catch (e) {
-                this.setState({...this.state, error: e.message, newComment: ""});
-            }            
-        }     
+            this.setState({...this.state, comments: [newComment].concat(this.state.comments), newComment: "", error: ""});
+        }
+        catch (e) {
+            this.setState({...this.state, error: e.message, newComment: ""});
+        }            
     }
 
     private _getComments(): React.ReactNode {

@@ -85,21 +85,13 @@ export function getVsIdFromGroupUniqueName(str: string): string {
     return vsid;
 }
 
-export async function saveWorkItem(workItem: WorkItem, workItemType: string, fieldValues: IDictionaryStringTo<string>, withRevision?: boolean): Promise<WorkItem> {
+export async function saveWorkItem(workItem: WorkItem, workItemType: string, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
     let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
     for (let fieldRefName in fieldValues) {
         patchDocument.push({
             op: Operation.Add,
             path: `/fields/${fieldRefName}`,
             value: fieldValues[fieldRefName]
-        } as JsonPatchOperation);
-    }
-
-    if (withRevision) {
-        patchDocument.push({
-            op: Operation.Test,
-            path: "/rev",
-            value: workItem.rev
         } as JsonPatchOperation);
     }
 
@@ -179,12 +171,6 @@ export async function removeFromBugBash(bugBashId: string, workItems: WorkItem[]
                 path: `/fields/System.Tags`,
                 value: tagArr.join(";")
             } as JsonPatchOperation];
-
-        patchDocument.push({
-            op: Operation.Test,
-            path: "/rev",
-            value: workItem.rev
-        } as JsonPatchOperation);
 
         updates.push([workItem.id, patchDocument]);
     }

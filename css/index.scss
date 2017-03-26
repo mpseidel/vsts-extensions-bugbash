@@ -337,11 +337,6 @@
                 margin-bottom: 10px;
             }
 
-            .comment-textarea {
-                resize: none;
-                height: 100px;
-            }
-
             .workitem-comments {
                 padding-top: 10px;
                 overflow: auto;
@@ -372,6 +367,7 @@
 
                     .message {
                         margin-top: 5px;
+                        word-wrap: break-word;
                     }
                 }
             }

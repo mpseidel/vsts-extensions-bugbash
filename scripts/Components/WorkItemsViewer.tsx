@@ -315,7 +315,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         fieldValues["System.Tags"] = tagArr.join(";");
 
         try {
-            let workItem = await saveWorkItem(item, "", fieldValues, true);
+            let workItem = await saveWorkItem(item, "", fieldValues);
             this.setState({...this.state, workItemError: null});
             this.props.updateWorkItem(workItem);
         }
@@ -348,7 +348,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         fieldValues["System.Tags"] = tagArr.join(";");
 
         try {
-            let workItem = await saveWorkItem(item, "", fieldValues, true);
+            let workItem = await saveWorkItem(item, "", fieldValues);
             this.setState({...this.state, workItemError: null});
             this.props.updateWorkItem(workItem);
         }
