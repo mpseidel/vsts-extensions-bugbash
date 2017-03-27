@@ -150,7 +150,7 @@ export class WorkItemDiscussion extends React.Component<IWorkItemDiscussionProps
         this.setState({...this.state, newComment: "", error: ""});
 
         try {
-            let workItem = await saveWorkItem(this.props.workItem, "", {"System.History": commentText});
+            let workItem = await saveWorkItem(this.props.workItem.id, {"System.History": commentText});
             let newComment: WorkItemComment = {
                 text: commentText,
                 revisedBy: {id: VSS.getWebContext().user.id, name: `${VSS.getWebContext().user.name} <${VSS.getWebContext().user.uniqueName}>`, url: ""},

@@ -19,7 +19,7 @@ import { IBaseProps, IBugBash, Constants } from "../Models";
 import { Loading } from "./Loading";
 import { MessagePanel, MessageType } from "./MessagePanel";
 import { IdentityView } from "./IdentityView";
-import { saveWorkItem, isWorkItemAccepted, isWorkItemRejected, getBugBashTag, removeFromBugBash } from "../Helpers";
+import Helpers = require("../Helpers");
 
 interface IWorkItemsViewerState {
     workItemError?: string;
@@ -36,7 +36,7 @@ export interface IWorkItemsViewerProps extends IBaseProps {
     refreshWorkItems: (workItems: WorkItem[]) => void;
     changeSort: (sortColumn: string, sortOrder: string) => void;
     onShowDiscussions: (workItem: WorkItem) => void;
-    updateWorkItem: (workItem: WorkItem) => void;
+    updateWorkItems: (workItems: WorkItem[]) => void;
 }
 
 export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWorkItemsViewerState> {
@@ -66,21 +66,35 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 {
                     key: "Delete", name: "Delete", title: "Delete selected workitems", iconProps: {iconName: "Delete"}, 
                     disabled: this._selection.getSelectedCount() == 0,
-                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                    onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                         this._deleteSelectedWorkItems();
                     }
                 },
                 {
                     key: "Merge", name: "Merge duplicates", title: "Merge selected workitems as duplicates", iconProps: {iconName: "Merge"}, 
                     disabled: this._selection.getSelectedCount() <= 1,
-                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                    onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                         this._mergeSelectedWorkItems();
+                    }
+                },
+                {
+                    key: "Accept", name: "Accept", title: "Accept selected workitems", iconProps: {iconName: "SkypeCircleCheck"}, 
+                    disabled: this._selection.getSelectedCount() == 0,
+                    onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                        this._acceptOrRejectWorkItems(this._selection.getSelection() as WorkItem[], true);
+                    }
+                },
+                {
+                    key: "Reject", name: "Reject", title: "Reject selected workitems", iconProps: {iconName: "StatusErrorFull"}, 
+                    disabled: this._selection.getSelectedCount() == 0,
+                    onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                        this._acceptOrRejectWorkItems(this._selection.getSelection() as WorkItem[], false);
                     }
                 },
                 {
                     key: "OpenQuery", name: "Open as query", title: "Open selected workitems as a query", iconProps: {iconName: "OpenInNewWindow"}, 
                     disabled: this._selection.getSelectedCount() == 0,
-                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                    onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                         let url = `${VSS.getWebContext().host.uri}/${VSS.getWebContext().project.id}/_workitems?_a=query&wiql=${encodeURIComponent(this._getSelectedWorkItemsWiql())}`;
                         window.open(url, "_parent");
                     }
@@ -88,7 +102,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 {
                     key: "Remove", name: "Unlink from bug bash", title: "Unlink selected workitems from the bug bash instance", iconProps: {iconName: "RemoveLink"}, 
                     disabled: this._selection.getSelectedCount() == 0,
-                    onClick: async (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
+                    onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
                         this._removeSelectedWorkItemsFromBugBash();
                     }
                 }
@@ -240,11 +254,11 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
             case Constants.ACCEPT_STATUS_CELL_NAME:
                 let classNames = "overflow-ellipsis";
                 let statusText = "";
-                if (isWorkItemAccepted(item)) {
+                if (Helpers.isWorkItemAccepted(item)) {
                     classNames += " workitem-accepted";
                     statusText = Constants.ACCEPTED_TEXT;
                 }
-                else if(isWorkItemRejected(item)) {
+                else if(Helpers.isWorkItemRejected(item)) {
                     classNames += " workitem-rejected";
                     statusText = Constants.REJECTED_TEXT;
                 }
@@ -264,8 +278,8 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                 return (
                     <div className="workitem-row-actions-cell">
                         <IconButton icon="Chat" className="workitem-row-cell-button" title="Show discussions" onClick={() => this.props.onShowDiscussions(item)} />
-                        {!isWorkItemAccepted(item) && <IconButton className="accept-button workitem-row-cell-button" icon="SkypeCircleCheck" title="Accept workitem" onClick={() => this._acceptWorkItem(item)} />}
-                        {!isWorkItemRejected(item) && <IconButton className="reject-button workitem-row-cell-button" icon="StatusErrorFull" title="Reject workitem" onClick={() => this._rejectWorkItem(item)} />}
+                        {!Helpers.isWorkItemAccepted(item) && <IconButton className="accept-button workitem-row-cell-button" icon="SkypeCircleCheck" title="Accept workitem" onClick={() => this._acceptOrRejectWorkItems([item], true)} />}
+                        {!Helpers.isWorkItemRejected(item) && <IconButton className="reject-button workitem-row-cell-button" icon="StatusErrorFull" title="Reject workitem" onClick={() => this._acceptOrRejectWorkItems([item], false)} />}
                     </div>
                 );
             default:
@@ -291,71 +305,54 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         this.setState({...this.state, contextMenuTarget: null, isContextMenuVisible: false});
     }
 
-    private async _acceptWorkItem(item: WorkItem) {
-        let fieldValues: IDictionaryStringTo<string> = {};        
+    private async _acceptOrRejectWorkItems(workItems: WorkItem[], accept: boolean) {
+        let templateFieldValues: IDictionaryStringTo<string> = {};
+        let fieldValuesMap: IDictionaryNumberTo<IDictionaryStringTo<string>> = {};
+        const configTemplateKey = accept ? Constants.ACCEPT_CONFIG_TEMPLATE_KEY : Constants.REJECT_CONFIG_TEMPLATE_KEY;
+        const tagToBeAdded = accept ? Constants.BUGBASH_ACCEPT_TAG : Constants.BUGBASH_REJECT_TAG;
+        const tagToBeRemoved = accept ? Constants.BUGBASH_REJECT_TAG : Constants.BUGBASH_ACCEPT_TAG;
 
-        if (this.props.bugBashItem.configTemplates && this.props.bugBashItem.configTemplates[Constants.ACCEPT_CONFIG_TEMPLATE_KEY]) {
-            let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.bugBashItem.configTemplates[Constants.ACCEPT_CONFIG_TEMPLATE_KEY]);
+        if (this.props.bugBashItem.configTemplates && this.props.bugBashItem.configTemplates[configTemplateKey]) {
+            let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.bugBashItem.configTemplates[configTemplateKey]);
 
             if (templateFound) {
-                let template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.bugBashItem.configTemplates[Constants.ACCEPT_CONFIG_TEMPLATE_KEY]);
-                fieldValues = { ...template.fields };
+                let template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.bugBashItem.configTemplates[configTemplateKey]);
+                templateFieldValues = { ...template.fields };
             }
         }
 
-        // add Accept tag, bug bash tag and remove reject tag
-        let tags: string = fieldValues["System.Tags"] || "";
-        let tagArr = tags.split(";");
-        tagArr.push(Constants.BUGBASH_ACCEPT_TAG, getBugBashTag(this.props.bugBashItem.id));
-        let rejectedTagIndex = tagArr.indexOf(Constants.BUGBASH_REJECT_TAG);
-        if (rejectedTagIndex !== -1) {
-            tagArr.splice(rejectedTagIndex, 1);
-        }
-        
-        fieldValues["System.Tags"] = tagArr.join(";");
+        for (const workItem of workItems) {
+            let fieldValues: IDictionaryStringTo<string> = {...templateFieldValues};
 
+            // add Accept/Reject tag, bug bash tag and remove accept/reject tag
+            let tagArr = Helpers.parseTags(workItem.fields["System.Tags"]);
+            tagArr.push(tagToBeAdded, Helpers.getBugBashTag(this.props.bugBashItem.id));
+            let rejectedTagIndex = tagArr.indexOf(tagToBeRemoved);
+            if (rejectedTagIndex !== -1) {
+                tagArr.splice(rejectedTagIndex, 1);
+            }
+            
+            tagArr = tagArr.concat(Helpers.parseTags(fieldValues["System.Tags-Add"]));
+            tagArr = Utils_Array.subtract(tagArr, Helpers.parseTags(fieldValues["System.Tags-Remove"]), Utils_String.ignoreCaseComparer);
+
+            delete fieldValues["System.Tags-Add"];
+            delete fieldValues["System.Tags-Remove"];
+            delete fieldValues["System.Tags"];
+            
+            fieldValues["System.Tags"] = tagArr.join(";");
+
+            fieldValuesMap[workItem.id] = fieldValues;
+        }
+    
         try {
-            let workItem = await saveWorkItem(item, "", fieldValues);
+            let workItems = await Helpers.saveWorkItems(fieldValuesMap);
             this.setState({...this.state, workItemError: null});
-            this.props.updateWorkItem(workItem);
+            this.props.updateWorkItems(workItems);
         }
         catch (e) {
             this.setState({...this.state, workItemError: e.message});
         }
-    }
-
-    private async _rejectWorkItem(item: WorkItem) {
-        let fieldValues: IDictionaryStringTo<string> = {};        
-
-        if (this.props.bugBashItem.configTemplates && this.props.bugBashItem.configTemplates[Constants.REJECT_CONFIG_TEMPLATE_KEY]) {
-            let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.bugBashItem.configTemplates[Constants.REJECT_CONFIG_TEMPLATE_KEY]);
-
-            if (templateFound) {
-                let template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.bugBashItem.configTemplates[Constants.REJECT_CONFIG_TEMPLATE_KEY]);
-                fieldValues = { ...template.fields };
-            }
-        }
-
-        // add reject tag, bug bash tag and remove accept tag
-        let tags: string = fieldValues["System.Tags"] || "";
-        let tagArr = tags.split(";");
-        tagArr.push(Constants.BUGBASH_REJECT_TAG, getBugBashTag(this.props.bugBashItem.id));
-        let acceptedTagIndex = tagArr.indexOf(Constants.BUGBASH_ACCEPT_TAG);
-        if (acceptedTagIndex !== -1) {
-            tagArr.splice(acceptedTagIndex, 1);
-        }
-        
-        fieldValues["System.Tags"] = tagArr.join(";");
-
-        try {
-            let workItem = await saveWorkItem(item, "", fieldValues);
-            this.setState({...this.state, workItemError: null});
-            this.props.updateWorkItem(workItem);
-        }
-        catch (e) {
-            this.setState({...this.state, workItemError: e.message});
-        }
-    }
+    }    
 
     @autobind
     private async _openWorkItemDialog(e: React.MouseEvent<HTMLElement>, item: WorkItem) {
@@ -371,8 +368,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
             let dialogService: IHostDialogService = await VSS.getService(VSS.ServiceIds.Dialog) as IHostDialogService;
             try {
                 await dialogService.openMessageDialog("This action will merge the selected workitems into one workitem as duplicates and reject the rest of them. Are you sure you want to proceed?", { useBowtieStyle: true });  
-                try {
-                    await WitBatchClient.getClient().deleteWorkItemsBatch(selectedWorkItems.map((item: WorkItem) => item.id));
+                try {                    
                     let workItemResults = this.props.workItems.filter((item: WorkItem) => {
                         return Utils_Array.findIndex(selectedWorkItems, (wi: WorkItem) => Utils_String.equals(""+wi.id, ""+item.id)) === -1;
                     });
@@ -400,7 +396,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
             try {
                 await dialogService.openMessageDialog("Are you sure you want to remove the selected work items from this bugbash instance?", { useBowtieStyle: true });  
                 try {
-                    removeFromBugBash(this.props.bugBashItem.id, selectedWorkItems);
+                    Helpers.removeFromBugBash(this.props.bugBashItem.id, selectedWorkItems);
                     
                     let workItemResults = this.props.workItems.filter((item: WorkItem) => {
                         return Utils_Array.findIndex(selectedWorkItems, (wi: WorkItem) => Utils_String.equals(""+wi.id, ""+item.id)) === -1;
@@ -454,6 +450,9 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         let ids = selectedWorkItems.map((w:WorkItem) => w.id).join(",");
 
         return `SELECT [System.Id], [System.Title], [System.CreatedBy], [System.CreatedDate], [System.State], [System.AssignedTo], [System.AreaPath]
-                 FROM WorkItems WHERE [System.TeamProject] = @project AND [System.ID] IN (${ids}) ORDER BY [System.CreatedDate] DESC`;
+                 FROM WorkItems 
+                 WHERE [System.TeamProject] = @project 
+                 AND [System.ID] IN (${ids}) 
+                 ORDER BY [System.CreatedDate] DESC`;
     }
 }

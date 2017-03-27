@@ -8,7 +8,7 @@ import { WorkItemTemplate, WorkItem, FieldType } from "TFS/WorkItemTracking/Cont
 
 import { IBaseProps, IBugBash } from "../Models";
 import { MessagePanel, MessageType } from "./MessagePanel";
-import { createWorkItem, getBugBashTag } from "../Helpers";
+import Helpers = require("../Helpers");
 
 export interface INewWorkItemCreatorProps extends IBaseProps {
     item: IBugBash;
@@ -42,34 +42,35 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
     }
 
     @autobind
-    private async _onSaveClick() {
-        let newWorkItemFieldValues = {...this.state.newWorkItemFieldValues} || {};
-
+    private async _onSaveClick() {        
         if (!this._canCreateWorkItem()) {
             return;
         }        
-
-        // load template
+        
         let template: WorkItemTemplate = null;
+        let newWorkItemFieldValues = {...this.state.newWorkItemFieldValues} || {};
+        let templateFieldValues: IDictionaryStringTo<string> = {};        
 
         if (this.props.item.templateId) {     
             let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.item.templateId);
 
             if (templateFound) {
                 template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.item.templateId);
-                newWorkItemFieldValues = { ...template.fields, ...newWorkItemFieldValues };
+                templateFieldValues = { ...template.fields };
             }            
         } 
 
-        if (newWorkItemFieldValues["System.Tags"]) {
-            newWorkItemFieldValues["System.Tags"] = `${getBugBashTag(this.props.item.id)};${newWorkItemFieldValues["System.Tags"]}`;
-        }
-        else {
-            newWorkItemFieldValues["System.Tags"] = getBugBashTag(this.props.item.id);
-        }
+        let extraTags: string[] = Helpers.parseTags(templateFieldValues["System.Tags-Add"]);
+        delete templateFieldValues["System.Tags-Add"];
+        delete templateFieldValues["System.Tags"];
+        delete templateFieldValues["System.Tags-Remove"];
 
+        newWorkItemFieldValues = { ...templateFieldValues, ...newWorkItemFieldValues };
+        const existingTags = Helpers.parseTags(newWorkItemFieldValues["System.Tags"]);
+        newWorkItemFieldValues["System.Tags"] = existingTags.concat(Helpers.getBugBashTag(this.props.item.id)).concat(extraTags).join(";");
+        
         try {
-            let workItem = await createWorkItem(this.props.item.workItemType, newWorkItemFieldValues);
+            let workItem = await Helpers.createWorkItem(this.props.item.workItemType, newWorkItemFieldValues);
             this.setState({...this.state, workItemError: null, newWorkItemFieldValues: {}});
             this.props.addWorkItem(workItem);
         }

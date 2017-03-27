@@ -7,7 +7,7 @@ import { MessagePanel, MessageType } from "./MessagePanel";
 import { WorkItemsViewer } from "./WorkItemsViewer";
 import { NewWorkItemCreator } from "./NewWorkItemCreator";
 import { WorkItemDiscussion } from "./WorkItemDiscussion";
-import { isWorkItemAccepted, isWorkItemRejected, getBugBashTag, removeFromBugBash } from "../Helpers";
+import Helpers = require("../Helpers");
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";
@@ -93,7 +93,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                                 refreshWorkItems={this._refreshWorkItemsView} 
                                 changeSort={this._changeSort}
                                 onShowDiscussions={this._showDiscussions}
-                                updateWorkItem={this._addOrEditWorkItemInView}
+                                updateWorkItems={this._addOrEditWorkItemsInView}
                                 context={this.props.context} />
                             
                             <div className="right-side-content">
@@ -159,8 +159,8 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
                 return this.state.sortOrder === "desc" ? -1 * Utils_Date.defaultComparer(d1, d2) : Utils_Date.defaultComparer(d1, d2);
             }
             else if (Utils_String.equals(this.state.sortColumn, Constants.ACCEPT_STATUS_CELL_NAME, true)) {
-                let v1 = isWorkItemAccepted(w1) ? Constants.ACCEPTED_TEXT : (isWorkItemRejected(w1) ? Constants.REJECTED_TEXT : "");
-                let v2 = isWorkItemAccepted(w2) ? Constants.ACCEPTED_TEXT : (isWorkItemRejected(w2) ? Constants.REJECTED_TEXT : "");
+                let v1 = Helpers.isWorkItemAccepted(w1) ? Constants.ACCEPTED_TEXT : (Helpers.isWorkItemRejected(w1) ? Constants.REJECTED_TEXT : "");
+                let v2 = Helpers.isWorkItemAccepted(w2) ? Constants.ACCEPTED_TEXT : (Helpers.isWorkItemRejected(w2) ? Constants.REJECTED_TEXT : "");
                 return this.state.sortOrder === "desc" ? -1 * Utils_String.ignoreCaseComparer(v1, v2) : Utils_String.ignoreCaseComparer(v1, v2);
             }
             else {
@@ -175,7 +175,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
         }
         else {
             return sortedItems.filter((workItem: WorkItem) => {
-                let status = isWorkItemAccepted(workItem) ? Constants.ACCEPTED_TEXT : (isWorkItemRejected(workItem) ? Constants.REJECTED_TEXT : "");
+                let status = Helpers.isWorkItemAccepted(workItem) ? Constants.ACCEPTED_TEXT : (Helpers.isWorkItemRejected(workItem) ? Constants.REJECTED_TEXT : "");
                 const filterText = this.state.filterText;
                 return `${workItem.id}` === filterText
                     || Utils_String.caseInsensitiveContains(workItem.fields["System.AssignedTo"] || "", filterText)
@@ -268,7 +268,12 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
         const item = this.props.context.stores.bugBashItemStore.getItem(this.props.id);
 
         return {
-            query: `SELECT [System.Id], [System.Title], [System.CreatedBy], [System.CreatedDate], [System.State], [System.AssignedTo], [System.AreaPath] FROM WorkItems WHERE [System.TeamProject] = @project AND [System.WorkItemType] = '${item.workItemType}' AND [System.Tags] CONTAINS '${getBugBashTag(item.id)}' ORDER BY [System.CreatedDate] DESC`
+            query: `SELECT [System.Id], [System.Title], [System.CreatedBy], [System.CreatedDate], [System.State], [System.AssignedTo], [System.AreaPath] 
+                    FROM WorkItems 
+                    WHERE [System.TeamProject] = @project 
+                    AND [System.WorkItemType] = '${item.workItemType}' 
+                    AND [System.Tags] CONTAINS '${Helpers.getBugBashTag(item.id)}' 
+                    ORDER BY [System.CreatedDate] DESC`
         };
     }
 
@@ -278,15 +283,17 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
     }
 
     @autobind
-    private _addOrEditWorkItemInView(workItem: WorkItem) {
+    private _addOrEditWorkItemsInView(workItems: WorkItem[]) {
         let newWorkItemResults: WorkItem[] = this.state.workItemResults.slice();
 
-        let index = Utils_Array.findIndex(newWorkItemResults, (w: WorkItem) => w.id === workItem.id);
-        if (index == -1) {
-            newWorkItemResults.push(workItem);
-        }
-        else {
-            newWorkItemResults[index] = workItem;
+        for (const workItem of workItems) {
+            let index = Utils_Array.findIndex(newWorkItemResults, (w: WorkItem) => w.id === workItem.id);
+            if (index == -1) {
+                newWorkItemResults.push(workItem);
+            }
+            else {
+                newWorkItemResults[index] = workItem;
+            }
         }
         this.setState(this._mergeState({workItemResults: newWorkItemResults}));
     }
@@ -304,7 +311,7 @@ export class ViewBugBashView extends HubView<IViewHubViewState> {
             try {
                 await dialogService.openMessageDialog("Are you sure you want to remove all the work items from this bugbash instance?", { useBowtieStyle: true });  
                 try {
-                    removeFromBugBash(this.state.item.id, this.state.workItemResults);                    
+                    Helpers.removeFromBugBash(this.state.item.id, this.state.workItemResults);                    
                     this.setState({...this.state, workItemError: null, workItemResults: []});
                 }
                 catch (e) {

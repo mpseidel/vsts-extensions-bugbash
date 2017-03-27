@@ -85,7 +85,27 @@ export function getVsIdFromGroupUniqueName(str: string): string {
     return vsid;
 }
 
-export async function saveWorkItem(workItem: WorkItem, workItemType: string, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
+export async function saveWorkItems(fieldValuesMap: IDictionaryNumberTo<IDictionaryStringTo<string>>): Promise<WorkItem[]> {
+    let batchDocument: [number, JsonPatchDocument][] = [];
+
+    for (const id in fieldValuesMap) {
+        let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
+        for (let fieldRefName in fieldValuesMap[id]) {
+            patchDocument.push({
+                op: Operation.Add,
+                path: `/fields/${fieldRefName}`,
+                value: fieldValuesMap[id][fieldRefName]
+            } as JsonPatchOperation);
+        }
+
+        batchDocument.push([parseInt(id), patchDocument]);
+    }
+
+    let response = await WitBatchClient.getClient().updateWorkItemsBatch(batchDocument);
+    return response.value.map((v: WitBatchClient.JsonHttpResponse) => JSON.parse(v.body) as WorkItem);
+}
+
+export async function saveWorkItem(id: number, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
     let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [];
     for (let fieldRefName in fieldValues) {
         patchDocument.push({
@@ -95,7 +115,7 @@ export async function saveWorkItem(workItem: WorkItem, workItemType: string, fie
         } as JsonPatchOperation);
     }
 
-    return await WitClient.getClient().updateWorkItem(patchDocument, workItem.id);
+    return await WitClient.getClient().updateWorkItem(patchDocument, id);
 }
 
 export async function createWorkItem(workItemType: string, fieldValues: IDictionaryStringTo<string>): Promise<WorkItem> {
@@ -141,30 +161,20 @@ export function isInteger(value: string): boolean {
     return /^\d+$/.test(value);
 }
 
+export function parseTags(tags: string): string[] {
+    if (tags && tags.trim()) {
+        let tagsArr = (tags || "").split(";");
+        return tagsArr.map((t: string) => t.trim());
+    }
+    return [];
+}
+
 export async function removeFromBugBash(bugBashId: string, workItems: WorkItem[]): Promise<void> {
     let updates: [number, JsonPatchDocument][] = [];
 
     for (const workItem of workItems){
-        let tagArr: string[] = (workItem.fields["System.Tags"] as string || "").split(";");
-        tagArr.forEach((t: string, i: number) => { tagArr[i] = t.trim(); });
-
-        // remove bugbash id tag
-        let index = tagArr.indexOf(getBugBashTag(bugBashId));
-        if (index !== -1) {
-            tagArr.splice(index, 1);
-        }
-
-        // remove bugbash reject tag
-        index = tagArr.indexOf(Constants.BUGBASH_REJECT_TAG);
-        if (index !== -1) {
-            tagArr.splice(index, 1);
-        }
-
-        // remove bugbash accept tag
-        index = tagArr.indexOf(Constants.BUGBASH_ACCEPT_TAG);
-        if (index !== -1) {
-            tagArr.splice(index, 1);
-        }
+        let tagArr: string[] = parseTags(workItem.fields["System.Tags"]);
+        tagArr = Utils_Array.subtract(tagArr, [getBugBashTag(bugBashId), Constants.BUGBASH_ACCEPT_TAG, Constants.BUGBASH_REJECT_TAG], Utils_String.ignoreCaseComparer);
         
         let patchDocument: JsonPatchDocument & JsonPatchOperation[] = [{
                 op: Operation.Add,
