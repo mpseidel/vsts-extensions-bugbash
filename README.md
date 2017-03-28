@@ -51,7 +51,5 @@ To accept a workitem, click on blue arrow button, to reject a workitem click on 
 *P.S* - Each work item row in the results view also has a context menu. So users can right click on a row (or on multiple selected rows) to open the context menu.
 
 #### Future plans ####
-1. Add more actions for features like VC and Build
-2. Show the rules in work item toolbar as a menu item.
-3. Let users share their rules with other users/projects in the account
-4. Let user import/export rules in bulk as a json file.
+1. Investigate "Auto refresh" feature in the results view.
+2. Add a "Merge" action in workitem row's context menu which merges duplicate workitems into one.
