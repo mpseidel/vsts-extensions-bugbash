@@ -1,113 +1,54 @@
-# Perform multiple actions from just a single click in work item form
-A work item form group extension that lets users perform multiple actions on a workitem by just a single click. It shows up as a group in work item form where users can manage and perform one click actions.
+# Manage team wide bug bashes
+A work item hub extension that lets teams manage their bug bashes in a more efficient manner. When a new feature is being tested either org wide or team wide, a lots of bugs are created and its hard to track all the bugs created in one instance of testing. Users can use features like work item templates to use pre-defined set of field values while creating bugs and then track them using work item queries, but its a tedious process in 2 ways - 
 
-* <a href="#overview">Overview</a>
-* <a href="#actions">Actions</a>
-* <a href="#macros">Macros</a>
+1. A work item form needs to be opened each time to create a workitem.
+2. To track all workitems in the bug bash, you need to navigate to the query view which makes you lose work item form view.
+
+Some teams use tools like OneNote or other note syncing apps where users can track all the workitems and add new workitems in the same page, but then someone has to manually create VSTS workitems from that note.
+
+This extension tries to simplify this in 2 ways -
+
+1. View all the workitems created in a bug bash instance while creating a new workitem.
+2. Quickly accept/reject workitems.
 
 <a name="overview"></a>
 #### Overview ####
-![Group](img/groupoverview.png)
+The home page of the extension shows all the past/ongoing/upcoming bug bash instances. 
 
-In the screenshot above, 2 rules have been created. Both the rules have multiple actions associated with them. By just clicking on each rule button, all the corresponding actions would be executed in a serial manner. For ex - Clicking on the first button will set the state of current work item to "Resolved", set assigned to as empty and save the workitem, all in one go. If any of the action in the set failed for some reason, then all the actions after it wont be executed. 
-Using the toolbar in the extension, users can create new rules or edit existing ones. To create a new rule, click on "New" menu item, which opens up the create dialog.
+![Group](img/homepage.png)
 
-P.S. - Note that the rules are defined per user per work item type per project. If you create a rule for "Bug" in project "A", it will show up for all the bugs in project "A" but not for bugs of project "B" or any other work item type like "Feature".
+To create a new bug bash instance, click "New", which opens the bug bash editor
 
-![Group](img/newruledialog.png)
+![Group](img/editor.png)
 
-To add an action in this rule, select an action from the "Add action" dropdown -
+You can enter bug bash information in the editor to create it. Here are the properties of a bug bash instances -
 
-![Group](img/actions.png)
+1. **Title** *(required)* - The title of the bug bash instance
+2. **Description** - A short description about the bug bash. It can describe what the bug bash is for. What features need to be tested etc.
+3. **Start Date** - A start date for the bug bash. This is not a required field. An empty start date means the bug bash is ongoing until it ends.
+4. **End Date** - An end date for the bug bash. This is not a required field. An empty end date means the bug bash never ends.
+5. **Work item type** *(required)* - Describes which type of workitem this bug bash instance associates with. 
+6. **Work item template** - You can choose a work item template that would be used to autofill certain field values for each new workitem created in this bug bash instance. A work item template can be created from VSTS team admin view. Note that work item templates are team scoped, so in this dropdown, you can only choose templates which are in the scope of the current team.
+7. **Manually entered fields** *(required)* - Pick a set of fields which the users need to fill while creating workitems in this instance of bug bash.
+8. **Accept Workitem template** - Select which template should be applied to a workitem when a user accepts it in the bug bash's results view. 
+9. **Reject Workitem template** - Select which template should be applied to a workitem when a user rejects it in the bug bash's results view. 
 
-This dropdown shows all the available actions in the extension. Right now the extension supports only 6 extensions which will be described later in this document.
+*P.S.* : Work item templates are defined per team per workitem type. So the templates in the dropdowns would be scoped to the current team and the workitem type selected from WorkItemType dropdown. Since the templates are team scoped, each bug bash instance is also scoped to a team. So the bug bash instance created in the context of team "t1" would not show up in the bug bash view in team "t2".
 
-Clicking on an action from the dropdown will add that to the rule. For ex - if you click on "Set field value" action, it will add this -
+![Group](img/editview.png)
 
-![Group](img/addaction.png)
+Once saved, click on "Show Results" to go to the results view of this bug bash instance.
 
-Each action needs some user defined inputs. In the "Set field value" action, users can provide a field name and field value as input.
+![Group](img/results.png)
 
-![Group](img/actioninput.png)
+In the results view, users can view all the workitems created in this bug bash instance and also users can create new workitems in this bug bash. The workitems are associated with a particular bug bash instance via work item tags. If a workitem has a tag - "BugBash\_123", then it falls under the bug bash which has id 123. The bug bash id is of type "long int". When a new workitem is created from the right panel in this view, the workitem is created by using the user entered field values (Title and Repro steps in this case) and the work item template selected during bug bash creation. And then to associate the workitem with this instance of bug bash, a work item tag "BugBash_123" is added to the workitem.
+To accept a workitem, click on blue arrow button, to reject a workitem click on red cross button. When a workitem(s) is accepted, it applies the "Accept work item template" to the workitem (if its specified in the bug bash) and then adds a tag "BugBashItemAccepted" to the workitem to mark it as accepted in the bug bash. When a workitem(s) is rejected, it applies the "Reject work item template" to the workitem (if its specified in the bug bash) and then adds a tag "BugBashItemRejected" to the workitem to mark it as accepted in the bug bash. 
 
-Users can then choose to add more actions to the set -
+**Other Operations**
+1. *Open as Query* - Opens selected (or all) workitems as a VSTS query. 
+2. *Unlink workitems* - Unlinks selected (or all) workitems from this bug bash instance. By unlinking, I mean that it will remove the "BugBash_123", "BugBashItemAccepted" and "BugBashItemRejected" tags from the workitems which breaks the link between the workitem and a bug bash instance.
 
-![Group](img/multipleactions.png)
-
-Users can also choose to provide a color to a rule, that color shows up as background color of the rule button in the extension. To delete an action from the rule, click on the "trash" icon on the right side of each action. 
-
-To edit rules, click on "Edit" menu item in the extension. When clicked, the extension enters in "edit mode" where users can edit any rule. 
-
-![Group](img/editmode.png)
-
-To edit a rule in edit mode, click on the "..." button in each rule button, which shows up edit dropdown. 
-
-![Group](img/editdropdown.png)
-
-When you are done editing, click on "Done" which exits the edit mode.
-
-<a name="actions"></a>
-#### Actions ####
-
-##### Set Field Value #####
-This action lets user set a field value in the workitem. Note that this action will set the field value in the current work item form and not save the workitem automatically. To save the work item, add a "Save workitem" action. Users can also provide a macro as field value in this action. Macros are explain in detail later in this document.
-
-![Group](img/setfieldvalue.png)
-
-In the example above, the rule has 2 "set field value" actions which sets priority and state fields. 
-
-##### Mention someone #####
-This action lets user mention a list of users (semicolon seperated list of email address) in the workitem. Performing this action will add a comment in the workitem dicsussion where these users will be mentioned. This action also doesnt save the workitem automatically, it'll just set the comment in the current work item form and dirty it. Users can also choose to provide an optional message in the action. Users can also provide a macro as "mentioned users" in this action. Macros are explain in detail later in this document.
-
-![Group](img/mention.png)
-
-In the example above, the rule will mention Mohit and Matthew in the workitem and add the given message in the comment.
-
-##### Save work item #####
-This action lets user save the current workitem. Users can also choose to select "Continue after fail" input, which if selected will not break the action execution sequence even if save fails.
-
-![Group](img/save.png)
-
-In the example above, the rule will mention Mohit in the workitem, save the work item and assign the workitem to Mohit Bagra.
-
-##### Add a comment #####
-This action lets user enter a custom comment in the work item discussion.
-
-##### Add a tag #####
-This action lets user add a list of tags in the work item. The input should be a semicolon seperated value -
-
-![Group](img/tag.png)
-
-##### Move around kanban board #####
-This action allows user to move the current workitem in kanban board. Users can choose to either move it to the board of a different team by selecting the team name, or just move it to different column or row in the same team.
-
-![Group](img/board.png)
-
-In order to save this action, users will first need to select a team from the Team dropdown, then select a Board column (if this team has a board for the current work item type) and board row (only if multiple rows are configured in the selected team's board). If the selected board column is split in Doing and Done, then users can choose which sub column should it go to.
-
-Note that this is the only action which will save the work item using Work item rest API, since board fields are not managed by work item form. 
-
-<a name="macros"></a>
-#### Macros ####
-Macros are dynamic values, whose values are picked up from the current work item state. For ex, instead of giving a static field value in "Set field value" action, users can choose to provide a macro like "@me" which will set the field value to the current user. Here's a list of available macros -
-
-##### @Me Macro #####
-This macro sets the value to the current user. This can be used in "Set Field value" action or "Mention" action -
-
-![Group](img/mefieldvalue.png)
-
-![Group](img/memention.png)
-
-##### @Today Macro #####
-This macro sets the value to the current date. This can only be used in "Set Field value" action. Users can also choose to add/subtract certain number of days from @today by using "@today-2" or "@today+3"
-
-![Group](img/todaymacro.png)
-
-##### @fieldValue Macro #####
-This macro sets the value to the value of a given field. This can be used in "Set Field value" action or "Mention" action. In the example below, the macro sets the assigned to field value as the same value of field "Created By" and also mention the user which is the same value for "Created By" field.
-
-![Group](img/fieldvaluemacro.png)
-
+*P.S* - Each work item row in the results view also has a context menu. So users can right click on a row (or on multiple selected rows) to open the context menu.
 
 #### Future plans ####
 1. Add more actions for features like VC and Build

@@ -71,13 +71,6 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
                     }
                 },
                 {
-                    key: "Merge", name: "Merge duplicates", title: "Merge selected workitems as duplicates", iconProps: {iconName: "Merge"}, 
-                    disabled: this._selection.getSelectedCount() <= 1,
-                    onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
-                        this._mergeSelectedWorkItems();
-                    }
-                },
-                {
                     key: "Accept", name: "Accept", title: "Accept selected workitems", iconProps: {iconName: "SkypeCircleCheck"}, 
                     disabled: this._selection.getSelectedCount() == 0,
                     onClick: (event?: React.MouseEvent<HTMLElement>, menuItem?: IContextualMenuItem) => {
@@ -359,33 +352,6 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
         let newTab = e ? e.ctrlKey : false;
         let workItemNavSvc = await WorkItemFormNavigationService.getService();
         workItemNavSvc.openWorkItem(item.id, newTab);
-    }
-    
-    @autobind
-    private async _mergeSelectedWorkItems() {
-        let selectedWorkItems = this._selection.getSelection() as WorkItem[];
-        if (selectedWorkItems.length > 1) {
-            let dialogService: IHostDialogService = await VSS.getService(VSS.ServiceIds.Dialog) as IHostDialogService;
-            try {
-                await dialogService.openMessageDialog("This action will merge the selected workitems into one workitem as duplicates and reject the rest of them. Are you sure you want to proceed?", { useBowtieStyle: true });  
-                try {                    
-                    let workItemResults = this.props.workItems.filter((item: WorkItem) => {
-                        return Utils_Array.findIndex(selectedWorkItems, (wi: WorkItem) => Utils_String.equals(""+wi.id, ""+item.id)) === -1;
-                    });
-
-                    this._selection.setAllSelected(false);
-                    this.setState({...this.state, workItemError: null});
-                    this.props.refreshWorkItems(workItemResults);
-                }
-                catch (e) {
-                    this.setState({...this.state, workItemError: e.message});
-                }          
-            }
-            catch (e) {
-                // user selected "No"" in dialog
-                return;
-            }    
-        }
     }
 
     @autobind
