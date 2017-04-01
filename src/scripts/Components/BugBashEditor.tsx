@@ -1,13 +1,13 @@
 import * as React from "react";
-import { TextField } from "../OfficeFabric/TextField";
-import { CommandBar } from "../OfficeFabric/CommandBar";
-import { DatePicker } from "../OfficeFabric/DatePicker";
-import { Label } from "../OfficeFabric/Label";
-import { Dropdown } from "../OfficeFabric/components/Dropdown/Dropdown";
-import { IDropdownOption, IDropdownProps } from "../OfficeFabric/components/Dropdown/Dropdown.Props";
-import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
-import { TagPicker, ITag } from '../OfficeFabric/components/pickers/TagPicker/TagPicker';
-import { autobind } from "../OfficeFabric/Utilities";
+import { TextField } from "OfficeFabric/TextField";
+import { CommandBar } from "OfficeFabric/CommandBar";
+import { DatePicker } from "OfficeFabric/DatePicker";
+import { Label } from "OfficeFabric/Label";
+import { Dropdown } from "OfficeFabric/components/Dropdown/Dropdown";
+import { IDropdownOption, IDropdownProps } from "OfficeFabric/components/Dropdown/Dropdown.Props";
+import { IContextualMenuItem } from "OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
+import { TagPicker, ITag } from 'OfficeFabric/components/pickers/TagPicker/TagPicker';
+import { autobind } from "OfficeFabric/Utilities";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import { WorkItemTemplateReference, WorkItemField, WorkItemType } from "TFS/WorkItemTracking/Contracts";

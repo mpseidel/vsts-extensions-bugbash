@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Icon} from "../OfficeFabric/Icon";
+import {Icon} from "OfficeFabric/Icon";
 
 export interface IInputErrorProps {
     error: string;

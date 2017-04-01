@@ -16,10 +16,10 @@ import Utils_Date = require("VSS/Utils/Date");
 import Utils_String = require("VSS/Utils/String");
 import Utils_Array = require("VSS/Utils/Array");
 
-import { CommandBar } from "../OfficeFabric/CommandBar";
-import { SearchBox } from "../OfficeFabric/SearchBox";
-import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
-import { autobind } from "../OfficeFabric/Utilities";
+import { CommandBar } from "OfficeFabric/CommandBar";
+import { SearchBox } from "OfficeFabric/SearchBox";
+import { IContextualMenuItem } from "OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
+import { autobind } from "OfficeFabric/Utilities";
 
 interface IViewHubViewState extends IHubViewState {
     item: IBugBash;

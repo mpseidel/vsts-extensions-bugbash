@@ -1,9 +1,9 @@
 import * as React from "react";
-import { List } from "../OfficeFabric/List";
-import { autobind } from "../OfficeFabric/Utilities";
-import { Label } from "../OfficeFabric/Label";
-import { CommandBar } from "../OfficeFabric/CommandBar";
-import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
+import { List } from "OfficeFabric/List";
+import { autobind } from "OfficeFabric/Utilities";
+import { Label } from "OfficeFabric/Label";
+import { CommandBar } from "OfficeFabric/CommandBar";
+import { IContextualMenuItem } from "OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
 import Utils_Date = require("VSS/Utils/Date");

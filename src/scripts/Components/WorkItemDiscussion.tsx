@@ -1,9 +1,9 @@
 import * as React from "react";
-import { autobind } from "../OfficeFabric/Utilities";
-import { TextField } from "../OfficeFabric/TextField";
-import { Label } from "../OfficeFabric/Label";
-import { CommandBar } from "../OfficeFabric/CommandBar";
-import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
+import { autobind } from "OfficeFabric/Utilities";
+import { TextField } from "OfficeFabric/TextField";
+import { Label } from "OfficeFabric/Label";
+import { CommandBar } from "OfficeFabric/CommandBar";
+import { IContextualMenuItem } from "OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
 
 import { WorkItem, WorkItemComment } from "TFS/WorkItemTracking/Contracts";
 import * as WitClient from "TFS/WorkItemTracking/RestClient";

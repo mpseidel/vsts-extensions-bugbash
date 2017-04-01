@@ -1,8 +1,8 @@
 import * as React from "react";
-import { autobind } from "../OfficeFabric/Utilities";
-import { Label } from "../OfficeFabric/Label";
-import { TextField } from "../OfficeFabric/TextField";
-import { Button, ButtonType } from "../OfficeFabric/Button";
+import { autobind } from "OfficeFabric/Utilities";
+import { Label } from "OfficeFabric/Label";
+import { TextField } from "OfficeFabric/TextField";
+import { Button, ButtonType } from "OfficeFabric/Button";
 
 import { WorkItemTemplate, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
 

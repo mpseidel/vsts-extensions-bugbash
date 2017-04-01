@@ -1,11 +1,10 @@
 {
     "manifestVersion": 1,
     "id": "bugbash",
-    "version": "1.0.7",
+    "version": "1.0.1",
     "name": "Bug bash manager",
     "description": "Easier way to manage bug bashes",
     "publisher": "mohitbagra",
-    "public": false,
     "icons": {
         "default": "img/logo.png"
     },
@@ -49,25 +48,7 @@
     "branding": {
         "color": "#5C2D91",
         "theme": "dark"
-    },
-    "files": [
-        {
-            "path": "img",
-            "addressable": true
-        },
-        {
-            "path": "scripts",
-            "addressable": true
-        },   
-        {
-            "path": "css",
-            "addressable": true
-        },
-        {
-            "path": "index.html",
-            "addressable": true
-        }
-    ],
+    },    
     "categories": [
         "Plan and track"
     ],

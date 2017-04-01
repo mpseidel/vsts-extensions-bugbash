@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Spinner, SpinnerType } from "../OfficeFabric/Spinner";
+import { Spinner, SpinnerType } from "OfficeFabric/Spinner";
 
 export var Loading: React.StatelessComponent<any> = (): JSX.Element => {
     return (

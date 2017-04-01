@@ -1,12 +1,12 @@
 import * as React from "react";
-import { DetailsList } from "../OfficeFabric/DetailsList";
-import { DetailsListLayoutMode, IColumn, CheckboxVisibility, ConstrainMode } from "../OfficeFabric/components/DetailsList/DetailsList.Props";
-import { SelectionMode } from "../OfficeFabric/utilities/selection/interfaces";
-import { Selection } from "../OfficeFabric/utilities/selection/Selection";
-import { autobind } from "../OfficeFabric/Utilities";
-import { IContextualMenuItem } from "../OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
-import { IconButton } from "../OfficeFabric/Button";
-import { ContextualMenu } from "../OfficeFabric/ContextualMenu";
+import { DetailsList } from "OfficeFabric/DetailsList";
+import { DetailsListLayoutMode, IColumn, CheckboxVisibility, ConstrainMode } from "OfficeFabric/components/DetailsList/DetailsList.Props";
+import { SelectionMode } from "OfficeFabric/utilities/selection/interfaces";
+import { Selection } from "OfficeFabric/utilities/selection/Selection";
+import { autobind } from "OfficeFabric/Utilities";
+import { IContextualMenuItem } from "OfficeFabric/components/ContextualMenu/ContextualMenu.Props";
+import { IconButton } from "OfficeFabric/Button";
+import { ContextualMenu } from "OfficeFabric/ContextualMenu";
 
 import { WorkItem } from "TFS/WorkItemTracking/Contracts";
 import * as WitBatchClient from "TFS/WorkItemTracking/BatchRestClient";
@@ -351,7 +351,8 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
     private async _openWorkItemDialog(e: React.MouseEvent<HTMLElement>, item: WorkItem) {
         let newTab = e ? e.ctrlKey : false;
         let workItemNavSvc = await WorkItemFormNavigationService.getService();
-        workItemNavSvc.openWorkItem(item.id, newTab);
+        let workItem = await workItemNavSvc.openWorkItem(item.id, newTab);
+        alert("received");
     }
 
     @autobind

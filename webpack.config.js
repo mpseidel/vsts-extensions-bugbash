@@ -1,13 +1,15 @@
+var path = require("path");
 var webpack = require("webpack");
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     target: "web",
     entry: {
-        app: "./dist/scripts/Hub.js"
+        app: "./src/scripts/App.tsx"
     },
     output: {
-        filename: "./dist/Hub.js",
+        filename: "scripts/[name].js",
         libraryTarget: "amd"
     },
     externals: [
@@ -18,6 +20,33 @@ module.exports = {
         },
         /^VSS\/.*/, /^TFS\/.*/, /^q$/
     ],
+    resolve: {
+        alias: { 
+            "OfficeFabric": path.resolve(__dirname, "node_modules/office-ui-fabric-react/lib-amd")
+        },
+        extensions: [
+            "",
+            ".webpack.js",
+            ".web.js",
+            ".ts",
+            ".tsx",
+            ".js"],
+        root: [
+            path.resolve("./src/scripts")
+        ]
+    },
+    module: {
+        loaders: [
+            {
+                test: /\.tsx?$/,
+                loader: "ts-loader"
+            },
+            {
+                test: /\.s?css$/,
+                loaders: ["style-loader", "css-loader", "sass-loader"]
+            }
+        ]
+    },
     plugins: [
         new UglifyJSPlugin({
             compress: {
@@ -26,6 +55,21 @@ module.exports = {
             output: {
                 comments: false
             }
-        })
+        }),
+        new CopyWebpackPlugin([
+            { from: "./node_modules/vss-web-extension-sdk/lib/VSS.SDK.min.js", to: "scripts/libs/VSS.SDK.min.js" },
+            { from: "./node_modules/es6-promise/dist/es6-promise.min.js", to: "scripts/libs/es6-promise.min.js" },
+            { from: "./node_modules/bootstrap/dist/js/bootstrap.min.js", to: "scripts/libs/bootstrap.min.js" },
+            { from: "./node_modules/summernote/dist/summernote.min.js", to: "scripts/libs/summernote.min.js" },
+            { from: "./node_modules/jquery/dist/jquery.min.js", to: "scripts/libs/jquery.min.js" },
+            { from: "./node_modules/bootstrap/dist/css/bootstrap.min.css", to: "css/libs/bootstrap.min.css" },
+            { from: "./node_modules/summernote/dist/summernote.css", to: "css/libs/summernote.css" },
+            { from: "./node_modules/summernote/dist/font", to: "css/libs/font" },
+            { from: "./node_modules/office-ui-fabric-react/dist/css/fabric.min.css", to: "css/libs/fabric.min.css" },
+            { from: "./img", to: "img" },
+            { from: "./src/index.html", to: "./" },
+            { from: "./README.md", to: "README.md" },
+            { from: "./vss-extension.json", to: "vss-extension.json" }
+        ])
     ]
 }

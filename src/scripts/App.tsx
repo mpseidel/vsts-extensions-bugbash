@@ -1,8 +1,11 @@
+// styles
+import "../css/app.scss";
+
 // react imports
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { Fabric } from "./OfficeFabric/Fabric";
+import { Fabric } from "OfficeFabric/Fabric";
 
 // vsts imports
 import { HostNavigationService } from "VSS/SDK/Services/Navigation";
@@ -129,7 +132,7 @@ export class Hub extends React.Component<IHubProps, IHubState> {
                 this.setState({ hubViewMode: HubViewMode.View, id: state.id });
             }
         }, true);
-    }  
+    }
 }
 
 export function init() {
