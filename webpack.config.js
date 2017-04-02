@@ -6,7 +6,7 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = {
     target: "web",
     entry: {
-        app: "./src/scripts/App.tsx"
+        app: "./scripts/App.tsx"
     },
     output: {
         filename: "scripts/[name].js",
@@ -21,19 +21,11 @@ module.exports = {
         /^VSS\/.*/, /^TFS\/.*/, /^q$/
     ],
     resolve: {
+        extensions: [".webpack.js", ".web.js", ".ts", ".tsx", ".js"],
+        moduleExtensions: ["-loader"],
         alias: { 
             "OfficeFabric": path.resolve(__dirname, "node_modules/office-ui-fabric-react/lib-amd")
-        },
-        extensions: [
-            "",
-            ".webpack.js",
-            ".web.js",
-            ".ts",
-            ".tsx",
-            ".js"],
-        root: [
-            path.resolve("./src/scripts")
-        ]
+        }        
     },
     module: {
         loaders: [
@@ -67,7 +59,7 @@ module.exports = {
             { from: "./node_modules/summernote/dist/font", to: "css/libs/font" },
             { from: "./node_modules/office-ui-fabric-react/dist/css/fabric.min.css", to: "css/libs/fabric.min.css" },
             { from: "./img", to: "img" },
-            { from: "./src/index.html", to: "./" },
+            { from: "./index.html", to: "./" },
             { from: "./README.md", to: "README.md" },
             { from: "./vss-extension.json", to: "vss-extension.json" }
         ])

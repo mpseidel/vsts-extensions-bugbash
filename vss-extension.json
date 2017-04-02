@@ -1,7 +1,7 @@
 {
     "manifestVersion": 1,
     "id": "bugbash",
-    "version": "1.0.1",
+    "version": "1.0.16",
     "name": "Bug bash manager",
     "description": "Easier way to manage bug bashes",
     "publisher": "mohitbagra",
@@ -51,6 +51,28 @@
     },    
     "categories": [
         "Plan and track"
+    ],
+    "files": [
+        {
+            "path": "scripts",
+            "addressable": true
+        },
+        {
+            "path": "css",
+            "addressable": true
+        },
+        {
+            "path": "img",
+            "addressable": true
+        },
+        {
+            "path": "index.html",
+            "addressable": true
+        },
+        {
+            "path": "README.md",
+            "addressable": true
+        }
     ],
     "contributions": [        
         {

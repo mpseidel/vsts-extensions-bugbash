@@ -1,5 +1,4 @@
 dist
-temp
 node_modules
 typings
 *.vsix
@@ -8,7 +7,4 @@ typings
 .sass-cache
 css/*.css
 css/*.css.map
-scripts/OfficeFabric
-scripts/microsoft
-scripts/uifabric
 npm-debug.log

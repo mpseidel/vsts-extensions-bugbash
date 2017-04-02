@@ -1,17 +1,3 @@
 {
-    "public": true,
-    "files": [
-        {
-            "path": "../dist/scripts",
-            "addressable": true
-        },
-        {
-            "path": "../dist/css",
-            "addressable": true
-        },
-        {
-            "path": "../dist/img",
-            "addressable": true
-        }
-    ]
+    "public": true    
 }

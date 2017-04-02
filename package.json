@@ -7,11 +7,11 @@
   "version": "1.0.0",
   "scripts": {
     "clean": "rimraf dist *.vsix",
-    "cleanall": "npm run clean && rimraf typings node_modules .sass-cache",
-    "dev": "webpack-dev-server --hot --progress --colors --content-base ./src --https --port 8888",
-    "build:release": "npm run clean && mkdir dist && webpack --progress --colors --output-path ./dist -p",
-    "package:dev": "node ./cmd_scripts/packageDev",
-    "package:release": "node ./cmd_scripts/packageRelease",    
+    "cleanall": "npm run clean && rimraf typings node_modules",
+    "dev": "webpack-dev-server --hot --progress --colors --content-base ./ --port 8888",
+    "build:release": "npm run clean && mkdir dist && webpack --display-error-details --progress --colors --output-path ./dist -p",
+    "package:dev": "node ./configs/packageDev",
+    "package:release": "npm run build:release && node ./configs/packageRelease",    
     "postinstall": "typings install"
   },
   "devDependencies": {
