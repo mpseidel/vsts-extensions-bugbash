@@ -6,7 +6,7 @@ var CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = {
     target: "web",
     entry: {
-        app: "./scripts/App.tsx"
+        App: "./scripts/App.tsx"
     },
     output: {
         filename: "scripts/[name].js",
