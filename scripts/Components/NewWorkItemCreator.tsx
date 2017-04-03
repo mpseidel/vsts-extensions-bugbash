@@ -5,6 +5,7 @@ import { TextField } from "OfficeFabric/TextField";
 import { Button, ButtonType } from "OfficeFabric/Button";
 
 import { WorkItemTemplate, WorkItem, FieldType } from "TFS/WorkItemTracking/Contracts";
+import { WorkItemFormNavigationService } from "TFS/WorkItemTracking/Services";
 
 import { IBaseProps, IBugBash } from "../Models";
 import { MessagePanel, MessageType } from "./MessagePanel";
@@ -17,7 +18,8 @@ export interface INewWorkItemCreatorProps extends IBaseProps {
 
 export interface INewWorkItemCreatorState {
     newWorkItemFieldValues: IDictionaryStringTo<string>;
-    workItemError?: string
+    workItemError?: string;
+    creating?: boolean;
 }
 
 export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps, INewWorkItemCreatorState> {
@@ -26,7 +28,8 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
         
         this.state ={
             newWorkItemFieldValues: {},
-            workItemError: ""
+            workItemError: "",
+            creating: false
         };
     }
 
@@ -34,19 +37,51 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
         return (
             <div className="add-workitem-contents">
                 { this.state.workItemError && <MessagePanel message={this.state.workItemError} messageType={MessageType.Error} />}
-                <Label className="add-workitem-label">Add work item</Label>
+                <div className="header">
+                    <Label className="add-workitem-label">Create work item</Label>
+                    <Button className="create-via-dialog-button" buttonType={ButtonType.primary} onClick={this._onAddViaDialogClick}>
+                        Create via dialog
+                    </Button>
+                </div>
                 {this._getManualFieldsNode()}
-                <Button className="create-new-button" disabled={!this._canCreateWorkItem()} buttonType={ButtonType.primary} onClick={this._onSaveClick}>Save</Button>
+                <Button className="create-new-button" disabled={!this._canCreateWorkItem()} buttonType={ButtonType.primary} onClick={this._onAddClick}>
+                    {this.state.creating ? "Creating..." : "Create" }
+                </Button>
             </div>
         );
     }
 
+    @autobind 
+    private async _onAddViaDialogClick() {
+        let workItemNavSvc = await WorkItemFormNavigationService.getService();
+        let initialFieldValues: IDictionaryStringTo<string> = {};        
+
+        if (this.props.item.templateId) {     
+            let templateFound = await this.props.context.actionsCreator.ensureTemplateItem(this.props.item.templateId);
+
+            if (templateFound) {
+                let template = this.props.context.stores.workItemTemplateItemStore.getItem(this.props.item.templateId);
+                initialFieldValues = { ...template.fields };
+            }            
+        } 
+
+        if (initialFieldValues["System.Tags-Add"]) {
+            initialFieldValues["System.Tags"] = initialFieldValues["System.Tags-Add"];
+        }
+        delete initialFieldValues["System.Tags-Add"];
+        delete initialFieldValues["System.Tags-Remove"];
+
+        workItemNavSvc.openNewWorkItem(this.props.item.workItemType, initialFieldValues);
+    }
+
     @autobind
-    private async _onSaveClick() {        
+    private async _onAddClick() {
         if (!this._canCreateWorkItem()) {
             return;
         }        
         
+        this.setState({...this.state, creating: true, workItemError: null});
+
         let template: WorkItemTemplate = null;
         let newWorkItemFieldValues = {...this.state.newWorkItemFieldValues} || {};
         let templateFieldValues: IDictionaryStringTo<string> = {};        
@@ -71,16 +106,19 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
         
         try {
             let workItem = await Helpers.createWorkItem(this.props.item.workItemType, newWorkItemFieldValues);
-            this.setState({...this.state, workItemError: null, newWorkItemFieldValues: {}});
+            this.setState({...this.state, creating: false, workItemError: null, newWorkItemFieldValues: {}});
             this.props.addWorkItem(workItem);
         }
         catch (e) {
-            this.setState({...this.state, workItemError: e.message});
+            this.setState({...this.state, creating: false, workItemError: e.message});
         }
     }
 
      @autobind
     private _canCreateWorkItem(): boolean {
+        if (this.state.creating) {
+            return false;
+        }
         let newWorkItemFieldValues = this.state.newWorkItemFieldValues || {};
         for (let manualField of this.props.item.manualFields) {
             if (!newWorkItemFieldValues[manualField] || newWorkItemFieldValues[manualField].trim() === "") {

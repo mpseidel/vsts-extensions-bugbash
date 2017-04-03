@@ -316,11 +316,16 @@
         width: 25%;
 
         .add-workitem-contents {
-            .add-workitem-label {
-                font-size: 15px;
-                font-weight: bold;
-                margin-bottom: 10px;
-            }
+            .header {
+                display: flex;
+
+                .add-workitem-label {
+                    font-size: 15px;
+                    font-weight: bold;
+                    margin-bottom: 10px;
+                    flex: 1;
+                }
+            }            
 
             .manual-field-row {
                 margin-bottom: 10px;

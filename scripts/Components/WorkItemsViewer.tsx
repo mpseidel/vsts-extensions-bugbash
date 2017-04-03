@@ -351,8 +351,7 @@ export class WorkItemsViewer extends React.Component<IWorkItemsViewerProps, IWor
     private async _openWorkItemDialog(e: React.MouseEvent<HTMLElement>, item: WorkItem) {
         let newTab = e ? e.ctrlKey : false;
         let workItemNavSvc = await WorkItemFormNavigationService.getService();
-        let workItem = await workItemNavSvc.openWorkItem(item.id, newTab);
-        alert("received");
+        workItemNavSvc.openWorkItem(item.id, newTab);
     }
 
     @autobind
