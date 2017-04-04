@@ -11,11 +11,8 @@
         "**/*.css.map": {
             "when": "$(basename).scss"
         },
-        "**/*.vsix": true,
-        ".sass-cache/**/*": true,
-        "dist/**/*": true,
-        "scripts/microsoft/**/*": true,
-        "scripts/uifabric/**/*": true
+        "**/*.vsix": true,        
+        "dist/**/*": true
     },
     "vsicons.presets.angular": false
 }
