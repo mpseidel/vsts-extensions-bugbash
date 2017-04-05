@@ -38,10 +38,7 @@ export class NewWorkItemCreator extends React.Component<INewWorkItemCreatorProps
             <div className="add-workitem-contents">
                 { this.state.workItemError && <MessagePanel message={this.state.workItemError} messageType={MessageType.Error} />}
                 <div className="header">
-                    <Label className="add-workitem-label">Create work item</Label>
-                    <Button className="create-via-dialog-button" buttonType={ButtonType.primary} onClick={this._onAddViaDialogClick}>
-                        Create via dialog
-                    </Button>
+                    <Label className="add-workitem-label">Create work item</Label>                    
                 </div>
                 {this._getManualFieldsNode()}
                 <Button className="create-new-button" disabled={!this._canCreateWorkItem()} buttonType={ButtonType.primary} onClick={this._onAddClick}>
