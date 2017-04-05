@@ -316,7 +316,7 @@ export class BugBashEditor extends React.Component<IBugBashEditorProps, IBugBash
     }
 
     @autobind
-    private _onFieldFilterChanged(filterText: string, tagList: ITag[]) {
+    private _onFieldFilterChanged(filterText: string, tagList: ITag[]): ITag[] {
         return filterText
             ? this.state.fields.filter(field => field.name.toLowerCase().indexOf(filterText.toLowerCase()) === 0 
                 && Utils_Array.findIndex(tagList, (tag: ITag) => Utils_String.equals(tag.key, field.referenceName, true)) === -1).map(field => {
